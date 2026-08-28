@@ -10,7 +10,7 @@ This document records major decisions, milestones, benchmark findings, failures,
 
 **Project:** CetinLM  
 **Founder:** Mert Çetin  
-**Main technology brand:** Me Force Teknoloji
+**Main technology brand:** Me Force Technology 
 
 CetinLM is an independent AI research and engineering project focused on capable language models that remain practical and efficient on accessible hardware.
 
