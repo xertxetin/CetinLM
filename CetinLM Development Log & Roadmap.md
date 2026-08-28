@@ -1,4 +1,4 @@
-# CetinLM — LOG_PLAN_TARIH
+# CetinLM — CetinLM Development Log & Roadmap
 
 > Living development log, engineering memory, roadmap and decision record for CetinLM.
 
