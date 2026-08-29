@@ -1,5 +1,9 @@
 # CetinLM — Efficient Large Language Model
 
+<p align="left">
+<img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinJS Logo" width="250px">
+</p>
+
 CetinLM is an independent large language model research and engineering project focused on one practical question:
 
 > How capable can a modern language model become while remaining small, efficient, and realistically runnable on accessible hardware?
