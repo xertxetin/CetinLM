@@ -1,0 +1,1 @@
+(function(){"use strict";self.onmessage=async e=>{const{chats:t,folders:a,workspaces:r}=e.data;try{const s={version:1,exportDate:new Date().toISOString(),workspaces:r,folders:a,chats:t},o=JSON.stringify(s,null,2);self.postMessage({success:!0,data:o})}catch(s){self.postMessage({success:!1,error:s.message})}}})();

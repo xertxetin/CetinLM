@@ -1,0 +1,1 @@
+(function(){"use strict";self.onmessage=async r=>{const{query:s,chats:o}=r.data;if(!s){self.postMessage({results:[]});return}const t=s.toLowerCase(),n=o.filter(e=>!!(e.title.toLowerCase().includes(t)||e.messages&&e.messages.some(u=>u.content.toLowerCase().includes(t))));self.postMessage({results:n})}})();
