@@ -1,106 +1,308 @@
-# CetinLM — Efficient Large Language Model
-
 <p align="center">
-<img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinJS Logo" width="250px">
+  <img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinLM Logo" width="250px">
 </p>
 
-CetinLM is an independent large language model research and engineering project focused on one practical question:
+<h1 align="center">CetinLM</h1>
 
-> How capable can a modern language model become while remaining small, efficient, and realistically runnable on accessible hardware?
+<p align="center">
+  <strong>From-scratch language model research and engineering.</strong><br>
+  Architecture, tokenizer, data, training systems, diagnostics, post-training and inference — treated as one system.
+</p>
 
-The project is built end-to-end: tokenizer, dataset engineering, model architecture, pretraining, checkpointing, evaluation, instruction tuning, conversation, code, reasoning, and eventually tools/web/memory.
+<p align="center">
+  <img src="https://img.shields.io/badge/research-from%20scratch-111111" alt="From scratch">
+  <img src="https://img.shields.io/badge/architecture-decoder%20Transformer-111111" alt="Decoder Transformer">
+  <img src="https://img.shields.io/badge/attention-GQA-111111" alt="GQA">
+  <img src="https://img.shields.io/badge/position-RoPE-111111" alt="RoPE">
+  <img src="https://img.shields.io/badge/precision-BF16-111111" alt="BF16">
+  <img src="https://img.shields.io/badge/research-public%20engineering-111111" alt="Public engineering">
+</p>
 
-## Current status
+---
 
-**Active stage: Base / foundation-model pretraining**
+> **CetinLM is not a wrapper around an existing model.**
+>
+> It is an independent research program for understanding how capable, efficient language models can be engineered from first principles — and which parts of that methodology deserve to be scaled.
 
-Current 1B run:
+## The research question
 
-| Component | Configuration |
+The project starts from a simple idea:
+
+> **How much useful capability can be extracted from every parameter, training token and unit of compute before scale becomes the default answer?**
+
+CetinLM is deliberately built end-to-end so that cause and effect remain visible.
+
+```text
+Data
+  ↓
+Tokenizer
+  ↓
+Corpus engineering
+  ↓
+Model architecture
+  ↓
+Pretraining
+  ↓
+Scientific diagnostics
+  ↓
+Systems profiling
+  ↓
+Continued pretraining
+  ↓
+Instruction / Chat / Reasoning / Code
+  ↓
+Inference engineering
+  ↓
+Tools / Applications
+```
+
+The goal is not to optimize one isolated checkpoint.
+
+The goal is to develop a **model-building methodology**.
+
+---
+
+# CetinLM-1B: the first research instrument
+
+The first serious research platform is **CetinLM-1B Base**.
+
+It is intentionally large enough for meaningful language-model behavior to emerge, while remaining small enough that the entire stack can still be profiled, audited, measured and changed experimentally.
+
+### Reference architecture
+
+| Component | CetinLM-1B |
 |---|---:|
-| Parameters | 1,048,780,544 |
-| Approx. size | 1.049B |
-| Vocabulary | 65,536 |
-| Training target | 1,000,000,000 tokens |
-| Validation | 10,000,000 tokens |
-| Sequence length | 256 |
-| Micro-batch | 1 |
-| Gradient accumulation | 32 |
-| Effective tokens / step | 8,192 |
-| Precision | BF16 |
-| Optimizer | bitsandbytes AdamW 8-bit |
-| Target hardware | RTX 4070 Ti SUPER 16 GB |
-| Objective | Causal next-token prediction |
+| Parameters | **1,048,780,544** |
+| Vocabulary | **65,536** |
+| Hidden size | **1,792** |
+| Transformer layers | **20** |
+| Query heads | **28** |
+| KV heads | **7** |
+| Attention | **Grouped-Query Attention (GQA)** |
+| Head dimension | **64** |
+| MLP intermediate size | **7,168** |
+| Position encoding | **RoPE** |
+| RoPE theta | **10,000** |
+| Configured max sequence length | **4,096** |
+| Dropout | **0.0** |
+| Bias | **False** |
+| Input/output embeddings | **Tied** |
+| Objective | **Causal next-token prediction** |
 
-The current model is a **base language model**, not a finished chat assistant. Conversation, instruction following, code, reasoning and tool use are planned as later stages.
-
-## Development roadmap
-
-```text
-Base Pretraining
-       ↓
-Evaluation
-       ↓
-Instruction / SFT
-       ↓
-Conversation
-       ↓
-Code
-       ↓
-Math
-       ↓
-Reasoning
-       ↓
-Preference Optimization
-       ↓
-Chat
-       ↓
-Tools / Web / Memory
-       ↓
-Final Evaluation
-       ↓
-Compression / Efficient Deployment
-```
-
-Each major stage is intended to have its own evaluation suite.
-
-## Current training corpus
-
-The current corpus contains exactly:
+### Architecture sketch
 
 ```text
-Training:   1,000,000,000 tokens
-Validation:    10,000,000 tokens
-Total:      1,010,000,000 tokens
+token ids
+   │
+   ▼
+┌──────────────────────┐
+│   Token Embedding    │
+│  65,536 → 1,792      │
+└──────────┬───────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│          20 Transformer Blocks          │
+│                                         │
+│   Pre-Norm                              │
+│      ↓                                  │
+│   GQA Attention                         │
+│   28 Q heads / 7 KV heads / RoPE        │
+│      ↓                                  │
+│   Residual                              │
+│      ↓                                  │
+│   Pre-Norm                              │
+│      ↓                                  │
+│   SwiGLU MLP                            │
+│   1,792 → 7,168 → 1,792                 │
+│      ↓                                  │
+│   Residual                              │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+              tied LM head
+                   │
+                   ▼
+            next-token logits
 ```
 
-### Training quotas
+CetinLM-1B is a **base language model**, not a finished chat assistant.
 
-| Source | Train tokens | Share |
-|---|---:|---:|
-| FineWeb English | 400,000,000 | 40% |
-| C4 English | 50,000,000 | 5% |
-| C4 Turkish | 100,000,000 | 10% |
-| C4 Spanish | 50,000,000 | 5% |
-| C4 German | 50,000,000 | 5% |
-| C4 French | 50,000,000 | 5% |
-| C4 Russian | 50,000,000 | 5% |
-| C4 Arabic | 50,000,000 | 5% |
-| C4 Chinese | 50,000,000 | 5% |
-| C4 Japanese | 40,000,000 | 4% |
-| C4 Hindi | 40,000,000 | 4% |
-| C4 Persian | 20,000,000 | 2% |
-| C4 Korean | 20,000,000 | 2% |
-| C4 Portuguese | 10,000,000 | 1% |
-| C4 Indonesian | 10,000,000 | 1% |
-| C4 Vietnamese | 10,000,000 | 1% |
-| **TOTAL** | **1,000,000,000** | **100%** |
+Instruction following, conversation, reasoning, code specialization, preference optimization and tool use are separate research stages.
 
-Validation uses the same proportions and totals 10,000,000 tokens.
+---
 
-## Dataset pipeline
+# Why 1B?
 
-The project uses a controlled data pipeline rather than feeding raw downloads directly into training:
+The 1B scale is not the destination.
+
+It is the laboratory.
+
+```text
+small enough to inspect deeply
+          +
+large enough for real LM behavior
+          +
+affordable enough for repeated experiments
+          =
+controlled research scale
+```
+
+This lets us ask questions that become expensive or opaque at much larger scales:
+
+- Which batch geometry actually improves throughput?
+- Which attention backend wins on the real model?
+- Is a profiler hotspot worth changing?
+- Are document boundaries correct?
+- Is the model learning a concept even when greedy generation still looks poor?
+- Does a proposed optimization change the training math?
+- Which improvements survive measurement?
+
+If a methodology survives at 1B, the next question is how well it scales.
+
+---
+
+# Full-stack engineering
+
+CetinLM treats model development as one connected engineering problem.
+
+```text
+┌───────────────────────────────────────────────────────┐
+│                     CETINLM STACK                     │
+├───────────────────────────────────────────────────────┤
+│                                                       │
+│  Source data                                          │
+│      ↓                                                │
+│  Filtering / dedup / quotas                           │
+│      ↓                                                │
+│  Custom multilingual tokenizer                        │
+│      ↓                                                │
+│  Exact token accounting + binary shards               │
+│      ↓                                                │
+│  Decoder-only Transformer / GQA / RoPE / SwiGLU       │
+│      ↓                                                │
+│  BF16 training / AdamW8bit / checkpointing            │
+│      ↓                                                │
+│  Validation + target-rank diagnostics                 │
+│      ↓                                                │
+│  Kernel profiling + controlled A/B testing            │
+│      ↓                                                │
+│  Continued pretraining + context research             │
+│      ↓                                                │
+│  SFT / Chat / Reasoning / Code                        │
+│      ↓                                                │
+│  KV cache / quantization / serving                    │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+```
+
+No single component is treated as a magic trick.
+
+---
+
+# Training systems philosophy
+
+The reference 1B run is designed around a strict rule:
+
+> **Preserve the optimization objective. Improve the machine around it.**
+
+The stable training geometry uses:
+
+```text
+micro-batch            8
+gradient accumulation  4
+sequence length      256
+────────────────────────
+effective tokens/update = 8,192
+```
+
+Core training techniques include:
+
+- BF16 mixed precision,
+- AdamW 8-bit optimizer,
+- gradient checkpointing,
+- gradient clipping,
+- cosine learning-rate decay with warmup,
+- best/last checkpoint recovery,
+- deterministic evaluation snapshots,
+- exact token accounting,
+- single-GPU profiling.
+
+The project has already shown that the same effective token update can behave very differently depending on how work is presented to the GPU.
+
+That is why throughput changes are benchmarked rather than assumed.
+
+---
+
+# Measure first
+
+CetinLM follows a simple research loop:
+
+```text
+OBSERVE
+   ↓
+MEASURE
+   ↓
+FORM A HYPOTHESIS
+   ↓
+A/B TEST
+   ↓
+KEEP ONLY WHAT WINS
+   ↓
+DOCUMENT THE RESULT
+```
+
+Examples of questions already investigated include:
+
+- batch size vs. gradient accumulation,
+- GPU utilization under fixed effective token budgets,
+- activation-checkpointing cost,
+- SDPA backend behavior,
+- native GQA vs. expanded KV paths,
+- BF16 reduction behavior,
+- validation methodology,
+- next-token semantic target ranks,
+- EOS/document-boundary integrity.
+
+Negative results are kept.
+
+A theoretically attractive optimization that loses on the real system is still a useful experiment.
+
+---
+
+# Scientific diagnostics
+
+CetinLM is not evaluated only by looking at generated text.
+
+A raw base model can contain useful learned structure before it knows how to behave like an assistant.
+
+For that reason, the project separates:
+
+```text
+"Does the model know something?"
+             from
+"Does the model present it well?"
+```
+
+Evaluation layers include:
+
+- validation loss,
+- perplexity,
+- fixed English/Turkish probes,
+- next-token target ranks,
+- controlled generation tests,
+- degeneration/repetition observations,
+- checkpoint-to-checkpoint comparisons.
+
+A target moving from rank 200 to rank 2 is meaningful research evidence even if greedy decoding still produces a repetitive continuation.
+
+The same fixed diagnostics are repeated across milestones so progress can be measured instead of guessed.
+
+---
+
+# Data engineering
+
+The Phase-I foundation corpus is built through a controlled pipeline rather than feeding raw downloads directly into training.
 
 ```text
 Upstream datasets
@@ -111,7 +313,7 @@ Filtering / quality checks
        ↓
 Deduplication
        ↓
-Language/source quota control
+Language / source quota control
        ↓
 CetinLM tokenizer
        ↓
@@ -121,373 +323,237 @@ Train / validation split
        ↓
 Sharded binary token files
        ↓
-Integrity checks
+Integrity audits
 ```
 
-The current build completed with exact global totals:
+The initial foundation build contains:
 
 ```text
-Train:       1,000,000,000
-Validation:     10,000,000
-Total:       1,010,000,000
+Training   : 1,000,000,000 tokens
+Validation :    10,000,000 tokens
 ```
 
-## Tokenizer
+Major upstream sources for the initial build include **FineWeb** and **C4**.
 
-Current tokenizer:
+English and Turkish receive elevated representation, while the tokenizer and corpus include broader multilingual coverage.
+
+The corpus pipeline is treated as part of the model architecture: token efficiency, document boundaries, language mixture and data quality directly affect compute efficiency and learning behavior.
+
+---
+
+# Tokenizer
+
+CetinLM uses a custom multilingual tokenizer with:
 
 ```text
-data/cetin_tokenizer_v2.json
+Vocabulary: 65,536 tokens
 ```
 
-Vocabulary:
+The tokenizer is not treated as a replaceable preprocessing detail.
+
+Its design affects:
+
+- multilingual token efficiency,
+- effective context usage,
+- training cost,
+- inference cost,
+- representation quality,
+- future long-context behavior.
+
+Supported training languages currently include:
+
+`en, tr, de, fr, es, pt, it, nl, pl, ru, uk, ar, fa, hi, bn, ur, id, vi, th, zh, ja, ko`
+
+Coverage does not imply equal capability in every language.
+
+---
+
+# Context research
+
+CetinLM-1B is configured for a maximum sequence length of 4,096 tokens, but the initial base-pretraining run intentionally uses 256-token training sequences.
 
 ```text
-65,536 tokens
+configured context ≠ trained context
 ```
 
-The tokenizer is treated as a core model component because multilingual token efficiency affects context usage, training cost and inference cost.
+Long-context capability will be trained explicitly.
 
-## Evaluation
-
-Current evaluator:
+The planned continued-pretraining system uses document-length-aware buckets:
 
 ```text
-src/mertai/training/evaluate_1b.py
+short documents   → 256 / 512
+medium documents  → 1024 / 2048
+long documents    → 4096
 ```
 
-Current evaluation layers:
+with:
+
+- length bucketing,
+- EOS-aware packing,
+- token-budgeted batches,
+- dynamic micro-batch sizing,
+- minimal padding,
+- controlled long-context exposure.
+
+The objective is to learn long context **without forcing every short document to pay the compute cost of the largest window**.
+
+---
+
+# Research roadmap
 
 ```text
-Validation Loss
-Perplexity
-English cloze probes
-Turkish cloze probes
-Deterministic generation smoke tests
-```
-
-Reports are stored under:
-
-```text
-evaluation_1b/
-├── benchmark_history.jsonl
-├── latest_report.json
-└── report_step_XXXXXXXX.txt
-```
-
-The purpose is to track the same model throughout training instead of judging only the final checkpoint.
-
-### Important benchmark note
-
-The current English/Turkish cloze tests are early diagnostic smoke tests, not claims of general model intelligence. A serious benchmark suite will be expanded for:
-
-```text
-Language
-Knowledge
-Turkish
-Math
-Logic
+CetinLM-1B Base
+       │
+       ▼
+Foundation pretraining
+       │
+       ▼
+Freeze + comprehensive evaluation
+       │
+       ▼
+Continued pretraining
+       │
+       ├─ controlled token milestones
+       └─ dynamic 256 → 4096 context training
+       │
+       ▼
+Instruction SFT
+       │
+       ▼
+Conversation / Chat
+       │
+       ├─ stronger Turkish / English
+       ├─ identity / knowledge
+       └─ preference optimization
+       │
+       ▼
+Reasoning / Math
+       │
+       ▼
 Code
-Instruction Following
-Conversation
-Reasoning
-Long Context
-Tool Use
-Robustness
+       │
+       ▼
+Inference engineering
+       │
+       ├─ KV cache
+       ├─ quantization
+       ├─ memory optimization
+       └─ serving
+       │
+       ▼
+Tools / Web / Memory / Applications
 ```
 
-## Training reliability
+Each stage is evaluated independently.
 
-The trainer maintains:
+A capability is not claimed merely because it appears later in the roadmap.
+
+---
+
+# Model family
+
+CetinLM is intended to evolve as a model family rather than one overloaded checkpoint.
+
+Planned release naming follows the capability of the weights:
 
 ```text
-checkpoints_1b_base/
-├── best.pt
-└── last.pt
+CetinLM-1B-Base
+CetinLM-1B-Instruct
+CetinLM-1B-Chat
+CetinLM-1B-Reasoning
+CetinLM-1B-Code
 ```
 
-`last.pt` is used for recovery and `best.pt` tracks the best validation result.
+Future parameter scales may be explored only when the research evidence justifies them.
 
-Resume support includes optimizer state. The system has already been exercised after an unexpected power interruption and successfully resumed from a saved checkpoint rather than restarting from zero.
+The method scales first.
 
-## Hardware philosophy
+Then the model does.
 
-The current development target is intentionally:
+---
+
+# Hardware philosophy
+
+Accessible hardware is a **research constraint**, not the final identity of the project.
+
+The first 1B training platform uses:
 
 ```text
-RTX 4070 Ti SUPER
+NVIDIA RTX 4070 Ti SUPER
 16 GB VRAM
 ```
 
-The project is not primarily about building a model that requires datacenter hardware to run.
+This makes inefficiency difficult to hide.
 
-The research question is:
+Memory pressure, recompute cost, kernel choice, data movement and batch geometry all become measurable engineering problems.
 
-> How much useful capability can be achieved while remaining practical on hardware people can realistically access?
+The long-term question is not:
 
-Larger rented accelerators may be used for future scaling experiments, but the deployment goal remains efficiency and accessibility.
+> “Can CetinLM remain a home-GPU model forever?”
 
-## Scaling philosophy
+It is:
 
-Future model sizes may include:
+> **“What can we learn when efficiency is mandatory — and what happens when that engineering discipline is later given more scale?”**
 
-```text
-1B
- ↓
-2B / 3B
- ↓
-larger experiments
-```
+---
 
-A larger parameter count is not automatically considered better.
+# Research logs
 
-Future versions will be evaluated on:
+The main README intentionally avoids becoming a live scoreboard.
 
-- capability
-- quality
-- VRAM usage
-- inference speed
-- training cost
-- context length
-- compression
-- quantization
-- deployment practicality
+Checkpoint metrics, benchmark snapshots, experiments and discoveries are published as **dated research artifacts** instead.
 
-## Planned post-training
+Example:
 
-### Instruction / SFT
-Teach the model to follow explicit user instructions.
+- [CetinLM-1B Mid-Run Evaluation — 573M Tokens](./CETINLM_1B_MIDRUN_EVALUATION_573M_2026-08-30.md)
 
-### Conversation
-Teach multi-turn dialogue, context tracking and consistent assistant behavior.
+This keeps the project front page stable while preserving the history of the research program.
 
-### Code
-Teach code generation, debugging, explanation and refactoring.
-
-### Math
-Teach arithmetic and structured mathematical problem solving.
-
-### Reasoning
-Teach multi-step problem solving, planning, decomposition and verification.
-
-### Preference optimization
-Improve usefulness, correctness, style and consistency.
-
-### Tools / Web / Memory
-Later system-level capabilities may include tool calling, web retrieval, controlled memory and application integrations.
-
-These are future stages. The current base model should not be treated as already having them.
+---
 
 # Data sources and licensing
 
-## Important legal notice
+CetinLM uses third-party upstream datasets under their respective licenses and terms.
 
-CetinLM uses upstream datasets that are publicly distributed under their own licenses and terms. This repository does **not** claim that every individual item contained in a crawled dataset is free of all copyright, privacy, contractual, trademark, personality or other rights.
+Initial foundation sources include:
 
-**This README is documentation, not legal advice.**
+- [FineWeb](https://huggingface.co/datasets/HuggingFaceFW/fineweb)
+- [C4](https://huggingface.co/datasets/allenai/c4)
+- [Common Crawl](https://commoncrawl.org/)
 
-For commercial publication, model distribution, hosted services, dataset redistribution or other high-impact use, users should obtain qualified legal advice for their jurisdiction.
+The project does **not** claim ownership over upstream datasets or third-party content.
 
-### FineWeb
+A dataset-level license does not automatically guarantee that every individual web item is free of all separate copyright, privacy, contractual, trademark or other rights.
 
-Current project allocation:
-
-```text
-400,000,000 training tokens
-```
-
-Upstream dataset:
-
-- `HuggingFaceFW/fineweb`
-- License shown by the dataset: **Open Data Commons Attribution License (ODC-By) v1.0**
-- Source basis: Common Crawl
-
-References:
-
-- https://huggingface.co/datasets/HuggingFaceFW/fineweb
-- https://opendatacommons.org/licenses/by/1-0/
-- https://commoncrawl.org/terms-of-use
-
-FineWeb's published dataset documentation describes it as cleaned/deduplicated English web data derived from Common Crawl and identifies ODC-By 1.0 as the dataset license.
-
-### C4
-
-Current project allocations:
-
-```text
-English       50,000,000
-Turkish      100,000,000
-Spanish       50,000,000
-German        50,000,000
-French        50,000,000
-Russian       50,000,000
-Arabic        50,000,000
-Chinese       50,000,000
-Japanese      40,000,000
-Hindi         40,000,000
-Persian       20,000,000
-Korean        20,000,000
-Portuguese    10,000,000
-Indonesian    10,000,000
-Vietnamese    10,000,000
-```
-
-Upstream dataset:
-
-- `allenai/c4`
-- License shown by the dataset: **ODC-By**
-- Source basis: Common Crawl
-
-References:
-
-- https://huggingface.co/datasets/allenai/c4
-- https://opendatacommons.org/licenses/by/1-0/
-- https://commoncrawl.org/terms-of-use
-
-C4's published metadata identifies it as multilingual and licensed under ODC-By.
-
-## Why the distinction matters
-
-ODC-By grants rights over the licensed database subject to its conditions, but the ODC-By text explicitly notes that individual contents may be subject to separate rights, including copyright, privacy/data protection, personality, contract, patent and trademark rights.
-
-Common Crawl likewise states that crawled content may be subject to separate terms and third-party rights, and requires users to comply with applicable law and respect third-party rights.
-
-Therefore:
-
-```text
-Upstream dataset license
-        ≠
-Automatic clearance of every individual web item
-```
-
-CetinLM does not represent otherwise.
-
-## Project ownership
-
-Unless a separate file states otherwise:
-
-```text
-Original CetinLM source code
-Original CetinLM documentation
-Original project configuration
-Original project-created evaluation code
-Original project-created research material
-
-© CetinLM project
-All rights reserved.
-```
-
-This does **not** relicense or claim ownership of third-party datasets, software, trademarks, websites or other upstream material.
-
-Upstream rights remain with their respective licensors/rightsholders.
-
-## Downstream users
-
-Anyone using, redistributing, hosting, or integrating CetinLM-derived artifacts is responsible for their own compliance with applicable:
-
-- dataset licenses
-- attribution requirements
-- copyright
-- privacy/data protection
-- publicity/personality rights
-- trademarks
-- contractual terms
-- local AI/data regulations
-
-Users should independently review the licenses and terms that apply to their intended use.
-
-## Educational / research notice
-
-CetinLM is currently developed primarily for:
-
-- education
-- research
-- experimentation
-- reproducible engineering
-- model-development learning
-- efficiency research
-
-No guarantee is made regarding:
-
-- factual correctness
-- safety
-- legal compliance of downstream use
-- commercial fitness
-- absence of bias
-- absence of unwanted or third-party material in upstream data
-- suitability for any particular application
-
-The project authors do not assume responsibility for downstream use or for violations caused by a user's deployment, modification, redistribution, or generated content.
+Detailed provenance and release-specific licensing information will accompany public model/data artifacts where applicable.
 
 Nothing in this repository constitutes legal advice.
 
-## Third-party attribution
+---
 
-CetinLM may use third-party datasets, libraries and services.
+# Project ownership
 
-The project does not claim ownership over:
+Unless a separate file states otherwise, original CetinLM source code, documentation, project configuration, evaluation tooling and project-created research material remain the work of the CetinLM project / Me Force Technology.
 
-```text
-FineWeb
-C4
-Common Crawl
-Hugging Face
-Open Data Commons
-Third-party source websites
-Third-party libraries
-```
+Third-party datasets, software, services, names and trademarks remain with their respective owners and licensors.
 
-All third-party names and trademarks remain the property of their respective owners.
+A dedicated model-weight license will be selected for released checkpoints.
 
-# Reproducibility and provenance
+---
 
-The project aims to keep enough metadata to answer:
+# Project links
 
-```text
-What dataset was used?
-Where did it come from?
-Under which license/terms?
-How many tokens were used?
-Which language/source quota was used?
-Which tokenizer was used?
-Which checkpoint was evaluated?
-What was the validation result?
-Which hardware was used?
-Which training stage was active?
-```
+| Resource | Link |
+|---|---|
+| **Website** | https://cetinlm.meforcetechnology.com |
+| **Hugging Face** | https://huggingface.co/meforce |
+| **Repository** | https://github.com/xertxetin/CetinLM |
 
-Future dataset manifests should record, where practical:
+CetinLM is developed independently under **Me Force Technology** as a globally oriented language-model research program. The project originated in Türkiye and is documented publicly from its early research stages.
 
-```text
-source
-dataset name
-revision/version
-download date
-license
-terms URL
-upstream URL
-processing version
-token quota
-checksum / manifest
-```
-
-# Current project milestone
-
-The first serious foundation run is intended to establish a reproducible 1B-scale baseline on consumer hardware.
-
-The project will then use measured results to decide how much further capability can be gained through better data, post-training, architecture, compression and scaling.
+---
 
 # Philosophy
-
-CetinLM is not based on the claim that large AI models are bad.
-
-The project is based on a different question:
-
-> Can we get a large amount of useful intelligence without always requiring enormous hardware?
-
-As model size grows, memory, cost and deployment complexity can grow with it.
-
-We are exploring the other direction:
 
 ```text
 Better data
@@ -496,23 +562,37 @@ Better training
       +
 Better architecture
       +
+Better diagnostics
+      +
 Better post-training
       +
-Better compression
+Better inference
       =
-More capability per unit of hardware
+More capability per unit of compute
 ```
 
-The objective is not to make the biggest model possible.
+CetinLM is not based on the claim that large models are unnecessary.
 
-The objective is to make the most capable model we can **within a real-world hardware constraint**.
+It is based on the belief that **scale should amplify good engineering, not replace it**.
 
-# Final note
+We do not treat:
 
-CetinLM is a work in progress.
+```text
+parameter count        as intelligence
+configured context     as trained context
+one generation         as a benchmark
+a profiler suspicion   as a result
+a theoretical speedup  as a measured speedup
+```
 
-Numbers in this document describe the current development state and are not final performance claims.
+We measure.
 
-The project intentionally documents intermediate checkpoints, benchmark results, failures, dataset provenance and engineering decisions so that progress can be measured rather than assumed.
+We keep what survives measurement.
 
-**Build small. Learn deeply. Measure everything. Push the limits.**
+We document what does not.
+
+---
+
+<p align="center">
+  <strong>Build from first principles. Measure everything. Scale what works.</strong>
+</p>
