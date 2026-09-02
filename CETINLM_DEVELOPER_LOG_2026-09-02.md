@@ -1,268 +1,386 @@
-# CetinLM Developer Log — 2026-09-02
-
-**Status:** active redesign / corpus qualification  
-**Generation:** fresh-scratch CetinLM-1B  
-**Focus:** capability-dense data, fast precision filtering, first-party Turkish corpora, measured tokenizer selection
-
-## Why CetinLM changed direction
-
-Today marks a practical redesign of the CetinLM data strategy.
-
-The first generation proved that the model architecture, training stack, checkpointing, evaluation flow, and single-GPU engineering path work. It also made one limitation very clear: for a compact ~1B model, simply feeding more generic web or encyclopedia text is not enough. A small model has a limited token budget and limited capacity. Low-value tail data can consume that budget without teaching the capabilities users actually expect.
-
-The new direction is therefore simple:
-
-> **Every token should earn its place.**
-
-CetinLM will still use natural Turkish and English text, but raw volume is no longer the primary objective. The active corpus is being designed around usefulness, verification, diversity, and capability coverage.
-
-## Active model design
-
-The transformer body is intentionally stable while the corpus and tokenizer are qualified.
-
-| Component | Active design |
-|---|---:|
-| Layers | 20 |
-| Hidden size | 1,792 |
-| Query heads | 28 |
-| KV heads | 7 |
-| Head dimension | 64 |
-| MLP | SwiGLU, 7,168 intermediate |
-| Normalization | Pre-RMSNorm |
-| Positional encoding | RoPE |
-| Attention | GQA / SDPA |
-| Embeddings | tied input/output |
-| Bias / dropout | none |
-| Maximum configured context | 4,096 |
-
-The active model will be trained **from scratch**. Phase-I weights and tokenizer are historical research artifacts, not initialization requirements for the new generation.
-
-## Corpus design: capability-centric instead of volume-centric
-
-The current corpus plan separates data into useful capability families rather than treating all Turkish text as equivalent.
-
-Planned / active families include:
-
-- high-quality natural Turkish and English;
-- Turkish general and everyday utility;
-- Turkish research / grounded knowledge;
-- Turkish culture and daily life;
-- youth / practical knowledge;
-- mathematics and quantitative reasoning;
-- code and algorithms;
-- core science;
-- technical knowledge;
-- language, grammar, and writing diversity;
-- curated Wikipedia-derived Turkish prose.
-
-The objective is a **task-dense base-pretraining corpus**. This is not instruction tuning. The data should teach concepts, procedures, relationships, useful facts, natural language patterns, and problem-solving primitives before later post-training.
-
-## Natural-data pipeline frozen at v61.2
-
-The natural-data cleaning path reached a good speed/precision balance today and is now treated as the stable baseline.
-
-The active remote bootstrap is:
-
-| Source | Temporary remote share | Role |
-|---|---:|---|
-| FineWeb-Edu Dedup (EN) | 30% | high-quality English educational/general prose |
-| English Wikipedia | 5% | English natural/reference anchor |
-| Turkish FineWiki | 65% | Turkish natural/reference anchor |
-
-This is a **bootstrap mix**, not the final training mixture. First-party Turkish corpora are expected to replace a substantial part of the Turkish natural-data lane after qualification.
-
-TurkishFineWeb2 remains disabled from active acquisition. Its filters are retained for regression/history, but its low yield made it inefficient for the current large-scale workflow.
-
-### v61.2 FINAL-FLOOR
-
-The Turkish FineWiki path now has a final fail-closed invariant: documents with a final quality score below **75/100** cannot enter the clean cache.
-
-The important design choice is that this does **not** add another expensive text pass. The score already exists; the final floor is a cheap comparison plus a cache-row safety invariant.
-
-Latest 300K-character qualification audit:
-
-| Source | Accepted quality average | Accepted minimum |
-|---|---:|---:|
-| EN FineWeb-Edu | 88.12 | 85.97 |
-| TR FineWiki | 84.09 | 75.02 |
-
-In the same run, **59 Turkish FineWiki documents** were rejected by the v61.2 final score floor.
-
-The natural-data filter is deliberately being frozen here. Further quality gains should come primarily from better source selection and first-party data, not from turning the pipeline back into a slow chain of increasingly expensive web heuristics.
-
-## Speed is now a design constraint
-
-Earlier corpus versions could become bottlenecked by low-yield sources, oversized reserve behavior, and expensive filtering paths. The current generation treats throughput as part of data quality engineering.
-
-The rule is:
-
-> **Reject cheaply when confidence is high; spend expensive verification only where factual risk justifies it.**
-
-Examples:
-
-- raw web data: aggressive fail-closed filtering;
-- controlled general/youth/culture data: fast structural, language, repetition, diversity, and obvious-error filtering;
-- mathematics: much stricter deterministic verification;
-- science/technical: stronger factual checks where claims are high-risk or systematic.
-
-This allows CetinLM to process much larger first-party datasets without reintroducing the performance problems of earlier web-heavy pipelines.
-
-## First-party Turkish data
-
-A major part of the redesign is the move toward controlled Turkish datasets generated and curated by capability.
-
-The first-party lane is not assumed to be perfect and does not bypass filtering. Its advantage is **control**: topic selection, language, structure, intended capability, and generation process are known.
-
-Current design goals for first-party data:
-
-- clean JSONL training text;
-- generator state/checkpoint files excluded from training;
-- SHA256 provenance for every input;
-- exact and near-duplicate filtering;
-- opening/ending/template concentration checks;
-- n-gram and paragraph repetition checks;
-- language and obvious corruption checks;
-- topic and length diversity;
-- source-family-specific validation;
-- fail-closed rejection for clearly bad examples.
-
-The target is not theoretical perfection. The target is a corpus with **very high signal-to-noise ratio and low systematic error**.
-
-## Mathematics redesign
-
-Mathematics received special attention today.
-
-The first math generator showed an important failure mode of synthetic data: polished instructional prose can still contain confidently stated mathematical errors. The generator was therefore revised rather than accepted blindly.
-
-The current mathematics plan has two complementary lanes.
-
-### 1. Math Knowledge
-
-Conceptual pretraining text covering definitions, relationships, worked explanations, notation, and mathematical language.
-
-This lane teaches the model how mathematics is described and connected.
-
-### 2. Verified Math Reasoning — next major addition
-
-A separate generator will produce machine-verifiable problem-solving data with structures such as:
-
-```text
-problem
-→ reasoning / intermediate steps
-→ answer
-→ deterministic check
-```
-
-It will also include contrastive examples:
-
-```text
-wrong solution
-→ identify the error
-→ correct solution
-→ verification
-```
-
-Where possible, answers and symbolic relations will be generated or checked with Python/SymPy rather than trusting a language model to be its own verifier.
-
-This is an important distinction: **Math Knowledge teaches mathematical concepts; Verified Math Reasoning teaches the model to actually perform and check mathematical operations.**
-
-Verified Math Reasoning is now an explicit planned work item and should not be lost in later corpus work.
-
-## Everyday usefulness matters
-
-The new corpus is intentionally biased toward knowledge and procedures a small assistant is likely to need in real conversations.
-
-Examples include:
-
-- basic geography and common knowledge;
-- dates, time, percentages, units, and everyday arithmetic;
-- phone and PC comparisons;
-- RAM, storage, battery, camera, processors, and software support;
-- banking, shopping, travel, home, food, school, and work concepts;
-- practical “which is better?” and “what should I look for?” reasoning;
-- natural conversational Turkish variants.
-
-A compact model should not spend most of its capacity memorizing obscure encyclopedia tails while failing simple practical questions.
-
-## Tokenizer plan
-
-The tokenizer will also be trained from scratch after the tokenizer-independent clean cache is audited.
-
-Candidates:
-
-- 32,768
-- 49,152
-- 65,536
-
-All candidates use ByteLevel BPE with NFC normalization, complete byte coverage, and fixed special-token IDs.
-
-The final vocabulary size will be selected by measured Turkish/English fertility, compression, round-trip correctness, and held-out benchmarking. No candidate is considered final until explicitly frozen and SHA-pinned.
-
-## Qualification pipeline
-
-The current high-level sequence is:
-
-```text
-immutable source / release verification
-→ tokenizer-independent clean cache
-→ verify + human audit
-→ first-party capability qualification
-→ exact / near dedup + diversity control
-→ tokenizer 32K / 48K / 65K A/B
-→ held-out tokenizer benchmark
-→ explicit tokenizer freeze by SHA
-→ 1M-token corpus pilot
-→ human audit
-→ 10M-token scale gate
-→ human audit
-→ freeze data/tokenizer contracts
-→ measured final corpus build
-→ deep verification
-→ GPU/context profiling + canary/resume test
-→ fresh-scratch CetinLM-1B training
-→ evaluation
-→ later post-training / assistant alignment
-```
-
-The final corpus token count and exact family ratios remain intentionally unfrozen. They will be chosen after measuring qualified data volume, tokenizer efficiency, diversity, and capability coverage.
-
-## What is frozen today
-
-As of 2026-09-02:
-
-- fresh-scratch CetinLM-1B direction: **frozen**;
-- Phase-I as history/reference only: **frozen**;
-- stable 20-layer / 1,792-hidden transformer body: **current baseline**;
-- natural-data filter v61.2 FINAL-FLOOR: **frozen baseline**;
-- TurkishFineWeb2 active acquisition: **disabled**;
-- precision-first / trusted-first philosophy: **frozen**;
-- first-party capability-centric corpus direction: **active**;
-- fresh tokenizer A/B before training: **active plan**;
-- Verified Math Reasoning: **explicit next math milestone**.
-
-## Next work
-
-The immediate development focus is no longer another round of web-filter regexes. The next gains should come from corpus capability quality.
-
-Priority work:
-
-1. continue producing and improving controlled Turkish capability datasets;
-2. implement the first-party corpus assembler / qualification path;
-3. add deterministic and source-family-specific validators;
-4. build **Verified Math Reasoning**;
-5. add code, science, technical, and everyday-utility families;
-6. measure family sizes and diversity before assigning final mixture ratios;
-7. train and benchmark tokenizer candidates;
-8. run 1M and 10M qualification gates before committing to the final corpus.
-
-## Research hypothesis
-
-The current CetinLM generation is testing a simple hypothesis:
-
-> **For a compact language model, a smaller but capability-dense, well-filtered, and selectively verified corpus can be more useful than a much larger generic corpus with weak task density.**
-
-The project will evaluate that hypothesis through measured tokenizer behavior, held-out data audits, training curves, downstream capability tests, and direct comparisons with the historical Phase-I baseline.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinLM Logo" width="220px">
+</p>
+
+<h1 align="center">CetinLM Developer Log</h1>
+
+<p align="center">
+  <strong>2026-09-02 · New Scratch Generation / Corpus Architecture Redesign</strong><br>
+  From web-volume-first pretraining to a capability-dense Turkish/English research corpus.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/generation-fresh%20scratch-111111" alt="Fresh scratch">
+  <img src="https://img.shields.io/badge/data-capability%20centric-111111" alt="Capability centric">
+  <img src="https://img.shields.io/badge/TR%20target-65%25-111111" alt="Turkish 65%">
+  <img src="https://img.shields.io/badge/EN%20target-35%25-111111" alt="English 35%">
+  <img src="https://img.shields.io/badge/filter-v61.2%20FINAL--FLOOR-111111" alt="v61.2">
+  <img src="https://img.shields.io/badge/tokenizer-A%2FB%20pending-111111" alt="Tokenizer A/B">
+</p>
 
 ---
 
-Older Phase-I development reports, optimization notes, and previous corpus specifications are archived under [`phase1/`](./phase1/) and are retained for provenance only. They do not override the active project direction described here or in the current README.
+> [!IMPORTANT]
+> **CetinLM has entered a new scratch-generation phase.**
+>
+> Phase-I remains preserved as research history and a comparison baseline. The active model is not a continuation of the Phase-I checkpoint and does not inherit its tokenizer by default.
+
+# What changed today
+
+The project direction was simplified around one question:
+
+> **How much useful capability can a compact ~1B model learn when the corpus is designed for signal density instead of raw web volume?**
+
+The previous generation proved that the architecture, training loop, checkpointing, diagnostics, profiling, and single-GPU workflow can operate end-to-end. The new generation keeps that engineering discipline but changes the data strategy substantially.
+
+```text
+OLD EMPHASIS                         NEW EMPHASIS
+────────────                         ────────────
+more generic text                    more useful text
+web volume                           capability density
+one broad quality policy             family-specific validation
+fixed tokenizer assumption           tokenizer A/B + measured freeze
+continued-pretraining path            fresh-scratch training
+source quantity                      signal / diversity / usefulness
+```
+
+---
+
+# Active CetinLM-1B body
+
+The transformer body remains the current stable baseline while corpus and tokenizer qualification are completed.
+
+| Component | Current design |
+|---|---:|
+| Model scale | **~1.05B parameters** |
+| Transformer layers | **20** |
+| Hidden size | **1,792** |
+| Query heads | **28** |
+| KV heads | **7** |
+| Head dimension | **64** |
+| MLP | **SwiGLU · 7,168** |
+| Normalization | **Pre-RMSNorm** |
+| Attention | **GQA / SDPA** |
+| Position encoding | **RoPE** |
+| Input/output embeddings | **Tied** |
+| Bias / dropout | **None / 0.0** |
+| Maximum configured context | **4,096** |
+| Training direction | **Fresh scratch** |
+
+```text
+Token IDs
+   │
+   ▼
+┌────────────────────────┐
+│     Token Embedding    │
+│      vocab → 1792      │
+└───────────┬────────────┘
+            │
+            ▼
+┌────────────────────────────────────────────┐
+│           20 Transformer Blocks            │
+│                                            │
+│  RMSNorm → GQA Attention → Residual        │
+│           28Q / 7KV / RoPE                 │
+│                                            │
+│  RMSNorm → SwiGLU 1792→7168→1792 → Residual│
+└───────────────────┬────────────────────────┘
+                    │
+                    ▼
+               tied LM head
+                    │
+                    ▼
+             next-token logits
+```
+
+---
+
+# Corpus architecture
+
+The new corpus is designed around **capability families**. Turkish is intentionally emphasized because CetinLM is being built to become much stronger at practical Turkish while retaining high-quality English coverage.
+
+```text
+CetinLM training corpus
+│
+├── Turkish target lane — 65%
+│   │
+│   ├── First-party curated TR
+│   │   ├── TR Base
+│   │   ├── TR Research
+│   │   ├── TR Turkish Pulse
+│   │   └── TR Youth Base
+│   │
+│   ├── Capability-focused TR
+│   │   ├── TR Mathematics
+│   │   ├── TR Code
+│   │   ├── TR Science
+│   │   ├── TR Technical
+│   │   ├── Everyday Utility / Common Knowledge
+│   │   └── Language / Grammar / Writing Diversity
+│   │
+│   └── Natural TR
+│       ├── wiki_train_tr.jsonl
+│       ├── FineWiki TR
+│       └── NUCLEAR-filtered FineWeb TR
+│
+└── English target lane — 35%
+    └── High-quality EN
+        ├── FineWeb-Edu Dedup
+        ├── English Wikipedia
+        └── additional qualified EN sources
+```
+
+> [!NOTE]
+> **65% TR / 35% EN is the current target direction, not a promise that every raw source will be force-oversampled to hit a ratio.** Final family weights are frozen only after qualified token counts, diversity, and tokenizer efficiency are measured.
+
+### First-party Turkish families
+
+| Family | Primary role | Current treatment |
+|---|---|---|
+| **TR Base** | broad Turkish concepts and natural explanatory prose | active first-party lane |
+| **TR Research** | grounded technical/scientific/current knowledge | active first-party lane |
+| **TR Turkish Pulse** | culture, daily life, interests, music/pop culture | active first-party lane |
+| **TR Youth Base** | practical life, learning, technology, communication, finance | active first-party lane |
+| **TR Mathematics** | concepts + quantitative foundations | generator being improved |
+| **TR Code** | programming + algorithms | planned capability lane |
+| **TR Science** | core science | planned capability lane |
+| **TR Technical** | devices, systems, engineering, practical technology | planned capability lane |
+| **Everyday Utility** | common knowledge + real user questions | planned high-priority lane |
+
+The design principle is simple:
+
+> **A token that teaches a useful concept, procedure, relationship, or language pattern is worth more to a compact model than a token that only increases corpus size.**
+
+---
+
+# Natural-data filter: v61.2 FINAL-FLOOR
+
+The natural-data pipeline reached the current speed/precision target today and is frozen as the baseline instead of being made progressively slower.
+
+### Active remote bootstrap
+
+| Source | Temporary bootstrap share | Role |
+|---|---:|---|
+| **FineWeb-Edu Dedup (EN)** | **30%** | high-quality English educational/general text |
+| **English Wikipedia** | **5%** | English reference/natural-language anchor |
+| **FineWiki TR** | **65%** | Turkish natural/reference anchor |
+
+This remote bootstrap is **not the final corpus mix**. First-party Turkish datasets are expected to replace a substantial part of the Turkish lane after qualification.
+
+TurkishFineWeb2 is **not active in the v61.2 remote acquisition contract**. Its NUCLEAR/Tail-Seal filters are retained so selected Natural TR material can be gated later if it is worth the throughput cost.
+
+### Latest qualification audit
+
+| Source | Docs/cache snapshot | Avg accepted score | Min accepted score |
+|---|---:|---:|---:|
+| **EN FineWeb-Edu** | 30 sampled | **88.12** | **85.97** |
+| **EN Wikipedia** | 50 sampled | **84.23** | **68.96** |
+| **TR FineWiki** | 50 sampled | **84.09** | **75.02** |
+
+The v61.2 final invariant rejected **59 TR FineWiki documents** below the final score floor in that qualification run.
+
+```text
+TR FineWiki candidate
+        │
+        ▼
+existing quality pipeline
+        │
+        ▼
+final quality_score
+        │
+        ├── < 75.0 ───────► REJECT
+        │
+        └── ≥ 75.0 ───────► cache-row safety check
+                                  │
+                                  ▼
+                              CLEAN CACHE
+```
+
+No second LLM judge, no second full-text scan, and no expensive new regex cascade were added. **Speed remains a design constraint.**
+
+---
+
+# First-party qualification philosophy
+
+Controlled data does not bypass filtering, but it does not need to be treated like unknown raw web garbage either.
+
+```text
+first-party JSONL
+      │
+      ├─ exclude state_*.json / generator state
+      ├─ schema + UTF-8 + language checks
+      ├─ obvious corruption / leakage checks
+      ├─ exact + near duplicate control
+      ├─ template / opening / ending concentration
+      ├─ n-gram + paragraph repetition
+      ├─ topic + length diversity
+      └─ family-specific validation
+              │
+              ▼
+        qualified corpus lane
+```
+
+The target is **high signal-to-noise and low systematic error**, not the impossible claim that every sentence in a large pretraining corpus is perfect.
+
+---
+
+# Mathematics: split knowledge from reasoning
+
+The mathematics work produced an important design decision today: conceptual math prose and actual problem-solving should not be treated as the same training signal.
+
+```text
+TR Mathematics
+│
+├── Math Knowledge
+│   ├─ definitions
+│   ├─ notation
+│   ├─ conceptual relationships
+│   └─ worked explanations
+│
+├── Verified Math Reasoning   ← next major math milestone
+│   ├─ generated problem
+│   ├─ intermediate reasoning
+│   ├─ answer
+│   └─ Python / SymPy verification where possible
+│
+└── Contrastive Math
+    ├─ wrong solution
+    ├─ identify the error
+    ├─ corrected solution
+    └─ deterministic check
+```
+
+> [!IMPORTANT]
+> **Verified Math Reasoning is an explicit project milestone.** It is not being left as an informal idea to be rediscovered later.
+
+This is intended to teach both **mathematical language** and **mathematical execution**.
+
+---
+
+# Tokenizer qualification
+
+The new generation does not blindly inherit the historical tokenizer.
+
+| Candidate | Vocabulary | Status |
+|---|---:|---|
+| A | **32,768** | benchmark candidate |
+| B | **49,152** | benchmark candidate |
+| C | **65,536** | benchmark candidate |
+
+All use ByteLevel BPE, NFC normalization, complete byte coverage, and fixed special-token IDs.
+
+```text
+clean tokenizer-independent corpus
+              │
+              ▼
+      ┌───────┼────────┐
+      ▼       ▼        ▼
+    32K      48K      65K
+      │       │        │
+      └───────┼────────┘
+              ▼
+ TR/EN fertility + compression
+ round-trip + UNK + embedding cost
+              │
+              ▼
+        measured winner
+              │
+              ▼
+          SHA freeze
+```
+
+No vocabulary size is final until the benchmark selects it.
+
+---
+
+# Current build philosophy
+
+```text
+QUALITY
+  ↑
+  │      capability density
+  │      source control
+  │      deterministic verification where useful
+  │      human audit at scale gates
+  │
+  └──────────────────────────────────────────► THROUGHPUT
+          cheap fail-closed gates
+          no unnecessary second passes
+          no low-yield source bottlenecks
+```
+
+The rule is:
+
+> **Be aggressive about rejection, conservative about expensive computation.**
+
+A questionable document can be discarded. Pipeline throughput should not be sacrificed to rescue marginal data.
+
+---
+
+# Roadmap from here
+
+```text
+v61.2 natural-data baseline ───────────────┐
+                                           │
+first-party TR datasets ───────────────────┤
+                                           ▼
+                             corpus assembler / qualification
+                                           │
+           ┌───────────────────────────────┼──────────────────────────────┐
+           ▼                               ▼                              ▼
+  Math / Reasoning                  Code / Algorithms              Science / Technical
+           │                               │                              │
+           └───────────────────────────────┼──────────────────────────────┘
+                                           ▼
+                                 diversity + dedup audit
+                                           │
+                                           ▼
+                                tokenizer 32K/48K/65K A/B
+                                           │
+                                           ▼
+                                      tokenizer freeze
+                                           │
+                                           ▼
+                                      1M-token gate
+                                           │
+                                           ▼
+                                     10M-token gate
+                                           │
+                                           ▼
+                                  final corpus contract
+                                           │
+                                           ▼
+                                 fresh-scratch CetinLM-1B
+                                           │
+                                           ▼
+                                  evaluation / post-training
+```
+
+### Decisions already frozen
+
+| Decision | State |
+|---|---|
+| Fresh-scratch CetinLM-1B direction | **FROZEN** |
+| Phase-I role | **Historical baseline / archive** |
+| v61.2 natural filter | **FROZEN BASELINE** |
+| Precision-first / trusted-first philosophy | **FROZEN** |
+| First-party capability-centric corpus | **ACTIVE** |
+| Final tokenizer size | **NOT FROZEN — benchmark first** |
+| Exact final family ratios | **NOT FROZEN — measure first** |
+| Verified Math Reasoning | **NEXT MATH MILESTONE** |
+
+---
+
+# Research thesis for the new generation
+
+> **A compact language model should not have to memorize the entire noisy web before it can answer useful questions.**
+
+The active CetinLM generation tests whether better source control, stronger Turkish data, task-dense capability families, selective deterministic verification, and measured tokenizer design can extract substantially more useful capability from the same model scale.
+
+Phase-I documents remain available under [`phase1/`](./phase1/) for provenance and historical comparison. They do not override the active design described here.
+
+---
+
+<p align="center">
+  <strong>Better tokens. Better capability. Measure before scaling.</strong>
+</p>
