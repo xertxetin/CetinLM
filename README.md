@@ -533,6 +533,42 @@ Nothing in this repository constitutes legal advice.
 
 ---
 
+---
+
+# Model family
+
+CetinLM is designed to evolve as a **model family**, not as one overloaded checkpoint.
+
+The current fresh-scratch corpus program builds the shared capability foundation first. The same data program also prepares clean, source-aware material that can later be transformed or specialized for the appropriate post-training stage.
+
+```text
+CetinLM-1B-Base
+       │
+       ├── CetinLM-1B-Instruct
+       │
+       ├── CetinLM-1B-Chat
+       │
+       ├── CetinLM-1B-Reasoning
+       │
+       └── CetinLM-1B-Code
+```
+
+| Planned model | Primary role | Data direction |
+|---|---|---|
+| **CetinLM-1B-Base** | General pretrained foundation | High-quality TR/EN language, knowledge, mathematics, code, science, technical and everyday utility |
+| **CetinLM-1B-Instruct** | Instruction following and task completion | Instruction/task transformations built on the qualified capability corpus |
+| **CetinLM-1B-Chat** | Natural assistant behavior and conversation | Dialogue, conversational Turkish/English, assistant behavior and later preference-oriented data |
+| **CetinLM-1B-Reasoning** | Structured problem solving | Verified Math Reasoning, quantitative reasoning, error correction and other validated reasoning material |
+| **CetinLM-1B-Code** | Programming specialization | Code, algorithms, debugging, explanation and code-reasoning data |
+
+This is why the current dataset work is broader than ordinary web pretraining. **TR Mathematics, TR Code, TR Science, Technical, Everyday Utility and the first-party Turkish families are being engineered both to strengthen the Base model and to provide clean foundations for later family specialization.**
+
+The stages are intentionally separated: Base pretraining teaches broad representations and capabilities; Instruct, Chat, Reasoning and Code checkpoints specialize behavior without forcing every objective into a single set of weights.
+
+> **One foundation. Multiple capability-focused descendants.**
+
+---
+
 # Project links
 
 | Resource | Link |
