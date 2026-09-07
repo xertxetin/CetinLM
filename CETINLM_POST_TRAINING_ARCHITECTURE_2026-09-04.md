@@ -1,13 +1,18 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinLM Logo" width="220px">
-</p>
+<div align="center">
 
-<h1 align="center">CetinLM Post-Training Architecture</h1>
+# CetinLM Post-Training Architecture
 
-<p align="center">
-  <strong>Public research direction · 2026-09-04</strong><br>
-  A compact Turkish-first Base model extended through instruction following, reasoning, conversation, safety, and research/tool use.
-</p>
+**CetinLM Project History**  
+`2026-09-04` · preserved engineering record
+
+![Status](https://img.shields.io/badge/status-historical-6B7280)
+![Project](https://img.shields.io/badge/project-CetinLM-111827)
+![Current](https://img.shields.io/badge/current-V62.3-2563EB)
+
+</div>
+
+> [!IMPORTANT]
+> **Historical record — not an active training instruction.** This file is retained for auditability and may describe decisions that were later superseded. For the current Base-v1 contract, use the [repository README](../../../README.md), [active checkpoint](../../0_CETINLM_ACTIVE_CHECKPOINT.md), and [final corpus/mix contract](../../0_CETINLM_BASE_V1_FINAL_CORPUS_AND_MIX.md).
 
 ---
 
@@ -240,3 +245,12 @@ At approximately one billion parameters, CetinLM is testing whether carefully en
 <p align="center">
   <strong>Small core. Dense data. Measured reasoning. Research when needed.</strong>
 </p>
+
+---
+
+<!-- CETINLM_HISTORY_FOOTER -->
+<div align="center">
+
+<sub>Preserved CetinLM history · Current state lives in <a href="../../../README.md">README.md</a> and <a href="../../0_CETINLM_ACTIVE_CHECKPOINT.md">0_CETINLM_ACTIVE_CHECKPOINT.md</a>.</sub>
+
+</div>

@@ -1,22 +1,18 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinLM Logo" width="220px">
-</p>
+<div align="center">
 
-<h1 align="center">CetinLM Developer Log</h1>
+# CetinLM Developer Log
 
-<p align="center">
-  <strong>2026-09-02 · New Scratch Generation / Corpus Architecture Redesign</strong><br>
-  From web-volume-first pretraining to a capability-dense Turkish/English research corpus.
-</p>
+**CetinLM Project History**  
+`2026-09-02` · preserved engineering record
 
-<p align="center">
-  <img src="https://img.shields.io/badge/generation-fresh%20scratch-111111" alt="Fresh scratch">
-  <img src="https://img.shields.io/badge/data-capability%20centric-111111" alt="Capability centric">
-  <img src="https://img.shields.io/badge/TR%20target-65%25-111111" alt="Turkish 65%">
-  <img src="https://img.shields.io/badge/EN%20target-35%25-111111" alt="English 35%">
-  <img src="https://img.shields.io/badge/filter-v61.2%20FINAL--FLOOR-111111" alt="v61.2">
-  <img src="https://img.shields.io/badge/tokenizer-A%2FB%20pending-111111" alt="Tokenizer A/B">
-</p>
+![Status](https://img.shields.io/badge/status-historical-6B7280)
+![Project](https://img.shields.io/badge/project-CetinLM-111827)
+![Current](https://img.shields.io/badge/current-V62.3-2563EB)
+
+</div>
+
+> [!IMPORTANT]
+> **Historical record — not an active training instruction.** This file is retained for auditability and may describe decisions that were later superseded. For the current Base-v1 contract, use the [repository README](../../../README.md), [active checkpoint](../../0_CETINLM_ACTIVE_CHECKPOINT.md), and [final corpus/mix contract](../../0_CETINLM_BASE_V1_FINAL_CORPUS_AND_MIX.md).
 
 ---
 
@@ -384,3 +380,77 @@ Phase-I documents remain available under [`phase1/`](./phase1/) for provenance a
 <p align="center">
   <strong>Better tokens. Better capability. Measure before scaling.</strong>
 </p>
+
+---
+
+# 2026-09-04 architecture note — Base first, behavior layers later
+
+The corpus work has clarified a broader project architecture. CetinLM-1B-Base is being treated as the reusable cognitive/language core, while later training stages specialize behavior rather than trying to force every assistant capability into Base pretraining.
+
+```text
+CetinLM-1B-Base
+│
+├── Instruct Training
+│   └── task / constraint following
+│
+├── Reasoning Training
+│   ├── normal reasoning
+│   ├── deep reasoning
+│   └── verified mathematical problem solving
+│
+├── Chat Training
+│   ├── natural Turkish
+│   ├── tone + context adaptation
+│   └── multi-turn conversation
+│
+├── Safety Training
+│   ├── harmful-intent discrimination
+│   ├── safe-help boundaries
+│   └── adversarial evaluation
+│
+└── Research / Tool-use
+    ├── identify missing/current information
+    ├── retrieve/search
+    ├── evaluate sources
+    ├── compare evidence
+    └── synthesize
+```
+
+This direction also changes how Base data is judged. The goal is not to create the largest possible archive. Base data should teach language, conceptual structure, useful world knowledge, practical problem spaces, multiple registers and reusable reasoning foundations.
+
+A compact model can then learn to recognize when information is missing or time-sensitive and use retrieval/tools rather than being expected to memorize every current answer in its weights.
+
+## First-party data policy
+
+The active first-party Turkish policy is **preserve-first quality control**:
+
+- keep useful HTML, code, markup, slang, narrative and unusual registers,
+- reject malformed or genuinely corrupted rows,
+- remove exact and strong near duplicates,
+- detect systematic repetition/noise,
+- surface questionable rows for review instead of aggressively deleting good material.
+
+Third-party external Turkish follows a separate reject-first qualification lane. No minimum acceptance percentage is required; external material is valuable only when it survives quality qualification.
+
+The local first-party convention is now:
+
+```text
+data/cetin_corpus/
+├── main.jsonl   # highest-priority project-created Base material
+└── wiki.jsonl   # project-collected Turkish Wiki material
+```
+
+Clean unique `main.jsonl` rows are retained, and `main` wins cross-file duplicates. Clean unique Wiki rows are retained in the qualified archive; later token-level measurement may adjust sampling/exposure without destroying the source corpus simply to satisfy an arbitrary ratio.
+
+A standalone public architecture note is available in [`CETINLM_POST_TRAINING_ARCHITECTURE_2026-09-04.md`](./CETINLM_POST_TRAINING_ARCHITECTURE_2026-09-04.md).
+
+> Public documentation describes philosophy, architecture, goals and verification strategy. Proprietary generation prompts, internal filtering recipes and sensitive source-selection details remain private.
+
+---
+
+<!-- CETINLM_HISTORY_FOOTER -->
+<div align="center">
+
+<sub>Preserved CetinLM history · Current state lives in <a href="../../../README.md">README.md</a> and <a href="../../0_CETINLM_ACTIVE_CHECKPOINT.md">0_CETINLM_ACTIVE_CHECKPOINT.md</a>.</sub>
+
+</div>
