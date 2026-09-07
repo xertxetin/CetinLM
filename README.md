@@ -218,7 +218,7 @@ When real checkpoints exist, this README will be updated with measured training 
 
 CetinLM combines project-created first-party corpora with qualified third-party natural-language sources. Third-party content remains subject to its original licenses, attribution requirements, copyright, privacy, and other applicable rights.
 
-Detailed source provenance and dataset-license metadata are maintained in [`THIRD_PARTY_DATA.md`](../../../THIRD_PARTY_DATA.md).
+Detailed source provenance and dataset-license metadata are maintained in [`THIRD_PARTY_DATA.md`](https://github.com/xertxetin/CetinLM/blob/main/THIRD_PARTY_DATA.md).
 
 The repository does not currently declare a repository-wide code/model license. No redistribution permission should be inferred from this README alone.
 
