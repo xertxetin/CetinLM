@@ -14,7 +14,7 @@
   <img alt="Tokenizer" src="https://img.shields.io/badge/tokenizer-48K-111827">
   <img alt="Context" src="https://img.shields.io/badge/initial_context-2K-111827">
   <img alt="Candidate corpus" src="https://img.shields.io/badge/candidate_corpus-11.47B_tokens-0F766E">
-  <img alt="Training" src="https://img.shields.io/badge/pretraining-preparing-B45309">
+  <img alt="Training" src="https://img.shields.io/badge/pretraining-started-0F766E">
 </p>
 
 ---
@@ -118,8 +118,11 @@ The second half is a true continuation, not a restarted run: optimizer state, le
 | Microbatch | **1** |
 | Gradient accumulation | **128** |
 | Effective tokens / update | **262,144** |
-| CUDA compute | **BF16** |
-| Activation checkpointing | Enabled |
+| Persistent parameters | **FP32 (qualified)** |
+| CUDA compute | **BF16 autocast** |
+| Activation checkpointing | **Whole-block (`block_full`) — measured winner** |
+| SDPA backend | **Auto — measured winner** |
+| Loss backend | **Standard cross-entropy — conservative qualified baseline** |
 | Peak learning rate | **3e-4** |
 | Minimum learning rate | **3e-5** |
 | Warmup | **200M processed tokens** |
@@ -208,11 +211,9 @@ Long pretraining runs are expensive, so silent failure modes are treated as engi
 
 ## Current status
 
-CetinLM is in the **final immutable corpus-build and pretraining-qualification stage**.
+CetinLM Base-v1 **pretraining is active** on the qualified RTX 4070 Ti SUPER runtime. The first run reached **10,747,904 processed tokens**, passed the early ~10M validation/checkpoint gate, was safely stopped for measured runtime A/B work, and then **resumed successfully from checkpoint-v4 state**.
 
-The architecture and 48K tokenizer are frozen. The five-source candidate pool has been measured and source-pinned, and the parallel final data build is in progress. **No pretrained CetinLM checkpoint, benchmark score, or capability result is claimed yet.**
-
-When real checkpoints exist, this README will be updated with measured training curves, evaluations, runtime observations, and released artifacts.
+The final conservative runtime keeps `block_full` activation checkpointing, legacy FP32 residual activations, automatic SDPA, standard cross-entropy, FP32 persistent parameters, BF16 autocast compute, and bitsandbytes AdamW8bit. Faster experimental paths were measured but were not adopted when they failed strict numerical-equivalence gates. The architecture, tokenizer, corpus, packing plan, optimizer schedule, and checkpoint-v4 resume chain remain unchanged. **No public pretrained weights, benchmark score, or capability result is claimed yet.**
 
 ## Data provenance
 
