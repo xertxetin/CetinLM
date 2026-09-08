@@ -1,126 +1,182 @@
-# CetinLM Third-Party Data Provenance and License Register
+<p align="center">
+  <img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinLM Logo" width="230px">
+</p>
 
-**Updated:** 2026-09-07  
-**Scope:** Base-v1 pretraining source provenance. This is an engineering/provenance record, not legal advice.
+<h1 align="center">CetinLM — Public Data Provenance</h1>
 
-This file records third-party sources that were evaluated for CetinLM, including active sources and rejected/inactive candidates. Historical entries are retained; they are not removed merely because a source is no longer active.
+<p align="center">
+  <strong>Third-party source transparency without publishing the private corpus recipe.</strong>
+</p>
 
-## Final active Base-v1 third-party sources
+<p align="center">
+  <img src="https://img.shields.io/badge/scope-Base--v1%20provenance-111111" alt="Base-v1 provenance">
+  <img src="https://img.shields.io/badge/status-active%20research-111111" alt="Active research">
+  <img src="https://img.shields.io/badge/principle-attribution%20%2B%20traceability-111111" alt="Attribution and traceability">
+</p>
 
-### FineWiki — Turkish FULL
+---
 
-- Upstream dataset: `HuggingFaceFW/finewiki`, Turkish (`tr`) configuration.
-- Local role: Turkish encyclopedic support.
-- Local file: `data/external_raw/finewiki_tr_full.jsonl`.
-- Local framing: top-level JSON objects separated by literal `\\n`; parsed read-only, never repaired in place.
-- Exact local accounting with frozen CetinTokenizer-v1:
-  - documents: **629,762**
-  - characters: **1,645,099,439**
-  - body tokens: **411,036,879**
-  - BOS+EOS: **1,259,524**
-  - exact training tokens: **412,296,403**
-- Status: **ACTIVE final Base-v1 source**.
-- Upstream license metadata verified 2026-09-07: dataset card lists **CC BY-SA 4.0** and **GFDL**; the processed FineWiki dataset card should be preserved with attribution when redistributing derived data/model documentation.
-- Attribution/provenance to preserve publicly: HuggingFaceFW FineWiki and underlying Wikipedia/Wikimedia provenance as described by the upstream card.
+## Why this page exists
 
-### FineWiki — English 400K controlled subset
+CetinLM combines project-created first-party material with qualified third-party language data.
 
-- Upstream dataset: `HuggingFaceFW/finewiki`, English (`en`) configuration.
-- Local role: controlled English encyclopedic support; intentionally not the full multi-million-row EN set.
-- Local file: `data/external_raw/finewiki_en_400k/finewiki_en_400k.jsonl`.
-- Local framing: same literal-`\\n` JSON-object stream; parsed read-only.
-- Exact local accounting:
-  - documents: **400,000**
-  - characters: **2,715,597,558**
-  - body tokens: **717,591,936**
-  - BOS+EOS: **800,000**
-  - exact training tokens: **718,391,936**
-- Status: **ACTIVE final Base-v1 source**.
-- License/provenance: same FineWiki dataset-card license metadata (**CC BY-SA 4.0 + GFDL**) and Wikipedia/Wikimedia attribution obligations described upstream.
+This page documents the **public provenance boundary** for the active Base-v1 research generation: which upstream dataset families are represented, what role they broadly serve, and which upstream license metadata / attribution obligations are relevant.
 
-### Temiz-OSCAR — filtered FULL preserve lane
+It intentionally does **not** publish the private corpus recipe. Exact mixture weights, local filtering implementation, source-level token allocation, internal manifests, reconstruction hashes and admission thresholds remain private during active Base-v1 research.
 
-- Dataset page: `YigitCahit/temiz-OSCAR`.
-- Upstream source family recorded by its dataset card: OSCAR-2019, OSCAR-2109, OSCAR-2201 and OSCAR-2301; the card describes Temiz-OSCAR as part of Bella Turca.
-- Dataset-card license metadata verified 2026-09-07: **CC BY-SA 4.0**.
-- Raw upstream size/card accounting: **23,739,767 documents** across four snapshots.
-- Local role: large cleaned Turkish natural/web knowledge backbone.
-- Local accepted file: `data/external_filtered/temiz_oscar_full/accepted.jsonl`.
-- Local preserve-first filter result:
-  - raw rows: **23,739,767**
-  - accepted: **20,302,145**
-  - rejected: **3,437,622**
-  - acceptance: **85.5196%**
-  - exact duplicates removed during local lane: **3,285,666**
-  - accepted characters: **47,709,094,190**
-- Exact frozen-tokenizer accounting of accepted corpus:
-  - body tokens: **10,239,134,755**
-  - BOS+EOS: **40,604,290**
-  - exact training tokens: **10,279,739,045**
-- Local rejection policy was intentionally conservative: high-confidence adult/escort promotion, gambling acquisition, sales/listings/affiliate/SEO/CTA/contact/link-shell garbage, pathological repetition/mojibake and exact duplicates; informational/news/technical/natural prose was preserved where possible.
-- Status: **ACTIVE final Base-v1 source**, superseding the earlier probe/audit-only status.
-- Important rights caveat: OSCAR-derived data consists of web-crawled text. Dataset-level license metadata does not erase possible rights/terms attached to individual upstream web pages. Public release documentation should preserve dataset attribution and avoid claiming ownership of third-party source text.
-- Citation/provenance: preserve the Temiz-OSCAR/Bella Turca citation supplied by the dataset card in public dataset/model documentation.
+> **Transparency should make the work accountable — not turn the corpus pipeline into a copy-paste recipe.**
 
-## First-party sources (not third-party licenses)
+---
 
-These are listed here only so the final corpus register is complete. Their ownership/provenance is project-controlled rather than inherited from the third-party datasets above.
+## Public provenance snapshot
 
-- `first_party_main`: 297,354 docs / 27,965,241 exact pre-dedup training tokens.
-- `first_party_wiki`: 19,229 docs / 28,785,197 exact pre-dedup training tokens.
+<table>
+<tr>
+<td width="33%" valign="top"><strong>First-party data</strong><br><br>Project-created material developed specifically for CetinLM and governed separately from third-party dataset licenses.</td>
+<td width="33%" valign="top"><strong>FineWiki</strong><br><br>Qualified Turkish and English encyclopedic support derived from the FineWiki / Wikipedia ecosystem.</td>
+<td width="33%" valign="top"><strong>Temiz-OSCAR</strong><br><br>Qualified Turkish natural/web-language support derived from the OSCAR family through Temiz-OSCAR.</td>
+</tr>
+</table>
 
-## Final active five-source pre-dedup accounting
+The frozen Base-v1 corpus contains **11.39B unique training tokens** after the project's final build and cross-source deduplication process. The exact composition of that frozen corpus is intentionally not reproduced here.
 
-| Source | Documents | Exact training tokens |
-|---|---:|---:|
-| first_party_main | 297,354 | 27,965,241 |
-| first_party_wiki | 19,229 | 28,785,197 |
-| FineWiki TR FULL | 629,762 | 412,296,403 |
-| FineWiki EN 400K | 400,000 | 718,391,936 |
-| filtered Temiz-OSCAR FULL | 20,302,145 | 10,279,739,045 |
-| **TOTAL** | **21,648,490** | **11,467,177,822** |
+---
 
-These are pre-cross-source-dedup numbers. Final unique train/validation statistics are generated only by the immutable Base-v1 build.
+## Active third-party source families
 
-## Final dedup/admission policy
+### FineWiki
 
-Global exact dedup during Base-v1 build uses `SHA256(NFC(text))`. Duplicate winner order:
+**Upstream:** `HuggingFaceFW/finewiki`  
+**Public role in CetinLM:** Turkish and English encyclopedic / natural-language support  
+**Upstream provenance:** FineWiki with underlying Wikipedia / Wikimedia provenance as described by the upstream dataset card  
+**Dataset-card license metadata recorded by the project:** **CC BY-SA 4.0 + GFDL**
 
-1. first-party main
-2. first-party own wiki
-3. FineWiki TR
-4. FineWiki EN
-5. Temiz-OSCAR
+CetinLM preserves FineWiki and underlying Wikipedia/Wikimedia attribution in public provenance documentation where applicable.
 
-Near/semantic dedup is audit-only in this generation. The final source manifest SHA-pins the exact local bytes and accounting reports before token build.
+The project does not claim ownership of FineWiki or underlying Wikipedia/Wikimedia text.
 
-## Rejected / inactive third-party candidates
+---
 
-### Serda Turkish raw-text / GOLD / DIAMOND salvage
+### Temiz-OSCAR
 
-- Status: **INACTIVE / excluded from final Base-v1**.
-- Reason: contamination/quality review and final source selection favored the cleaner exact-accounted five-source set.
-- Historical filters/reports remain in the repository for auditability.
+**Upstream:** `YigitCahit/temiz-OSCAR`  
+**Public role in CetinLM:** qualified Turkish natural/web-language support  
+**Upstream family:** OSCAR snapshots, with Temiz-OSCAR described by its dataset card as part of Bella Turca  
+**Dataset-card license metadata recorded by the project:** **CC BY-SA 4.0**
 
-### TurkishFineWeb2-cleaned
+CetinLM applies its own qualification and filtering before third-party material can participate in the frozen research corpus. The exact filtering implementation and thresholds are not published here.
 
-- Status: **INACTIVE / excluded from final Base-v1**.
-- Historical investigation remains documented.
+Because OSCAR-derived data originates from web-crawled text, upstream dataset-level license metadata does not automatically erase rights or terms that may apply to individual source pages.
 
-### FineWeb-Edu English probe
+The project does not claim ownership of the underlying third-party web content.
 
-- Status: **INACTIVE / excluded from final Base-v1**.
-- It is not silently reintroduced by the final mixer.
+---
 
-## Release rule
+## First-party material
 
-A source is training-active only if all of the following are true:
+CetinLM also contains project-created first-party data designed for the research program.
 
-1. provenance/license information is recorded here;
-2. local bytes are available and read-only;
-3. exact frozen-tokenizer accounting report is PASS;
-4. final source manifest pins source/report SHA-256;
-5. global exact dedup/build verification passes;
-6. source appears in the final post-dedup metadata and explicit `training_data_lock.json`.
+First-party data is **not treated as automatically trustworthy simply because we created it**. It is still subject to the project's own quality, duplication, framing and training-data qualification process before admission to an active generation.
 
-README/model-card language must distinguish dataset-card license metadata from ownership of underlying third-party text and must not claim that source-code verification equals legal clearance or trained-model capability.
+Public documentation intentionally describes first-party material at a high level rather than publishing the internal data-generation recipe or exact source allocation.
+
+---
+
+## Sources evaluated but not retained
+
+The research history includes third-party candidates that were tested or investigated and later excluded from the active Base-v1 generation.
+
+Examples include:
+
+- historical Serda Turkish data candidates;
+- TurkishFineWeb2-cleaned investigations;
+- a FineWeb-Edu English probe.
+
+Their presence in historical research notes does **not** mean they are active Base-v1 training sources.
+
+This distinction matters: CetinLM keeps rejected experiments for auditability rather than deleting them from history.
+
+---
+
+## The licensing distinction we preserve
+
+Dataset provenance is not the same thing as ownership of every item inside a dataset.
+
+```text
+Dataset-card license metadata
+              ≠
+automatic ownership or clearance
+of every underlying third-party item
+```
+
+Accordingly, CetinLM public documentation distinguishes among:
+
+- upstream dataset metadata;
+- upstream attribution requirements;
+- project-created processing / engineering;
+- underlying third-party content rights;
+- future model-weight licensing.
+
+A source being technically qualified for research does not, by itself, establish legal clearance for every possible downstream use.
+
+Nothing on this page constitutes legal advice.
+
+---
+
+## What CetinLM does not claim
+
+CetinLM does **not** claim that:
+
+- third-party source text becomes project-owned because it entered a training pipeline;
+- a dataset-card license automatically resolves every copyright, privacy, trademark, contractual or jurisdiction-specific issue in underlying content;
+- source-code or data-pipeline verification is equivalent to legal clearance;
+- training-data provenance by itself proves model safety, factuality or downstream suitability;
+- public visibility grants unrestricted reuse rights to future CetinLM weights or original project code.
+
+Release-specific licensing will be handled separately when public model artifacts are released.
+
+---
+
+## Public vs. private provenance detail
+
+| Public | Kept private during active Base-v1 research |
+|---|---|
+| Upstream dataset families | Exact source mixture / weights |
+| Broad role of each source family | Source-level token allocation |
+| Recorded upstream license metadata | Internal filter implementation |
+| Attribution / ownership caveats | Admission thresholds |
+| Active vs. rejected source status | Local file layout |
+| Frozen corpus scale | Internal manifests / reconstruction hashes |
+| High-level qualification philosophy | Full corpus reconstruction recipe |
+
+This boundary lets outside readers understand **what kind of data CetinLM uses and how provenance is treated** without publishing the full private dataset engineering stack.
+
+---
+
+## Provenance policy
+
+For an active research source, the project expects traceability sufficient to answer questions such as:
+
+- What upstream dataset family did this material come from?
+- What public license / terms metadata was recorded?
+- Is the source active, historical or rejected?
+- Was the material subject to project qualification before training?
+- Are upstream ownership and attribution boundaries preserved in public documentation?
+
+Internally, CetinLM retains substantially more detailed accounting and reproducibility metadata than is published on this public page.
+
+---
+
+## Project identity
+
+**CetinLM** is an independent language-model research program developed under **Me Force Technology** in Türkiye.
+
+The project is built around a simple idea:
+
+> **Better language models require better evidence — including evidence about where the data came from.**
+
+---
+
+<p align="center">
+  <a href="./README.md">← Public Research Log</a>
+</p>
