@@ -12,6 +12,14 @@ The exact reproduction blueprint remains private.
 
 ---
 
+## Current Base-v1 status
+
+Base-v1 is in active pretraining and has passed **1.2B processed tokens**. Recent public milestones show continuing held-out improvement while production throughput remains in the broad **~4.4–4.5K tok/s** range on the target single-16GB-GPU system.
+
+These are training-system observations, not final assistant-quality claims.
+
+---
+
 ## Model
 
 CetinLM Base-v1 is a decoder-only language model trained from scratch.
@@ -205,7 +213,7 @@ Base checkpoints can also be queried manually.
 
 This is intentionally treated as **raw base-model completion**, not as chat or instruction following.
 
-Base pretraining and later post-training behavior are treated as separate stages of model development.
+Base pretraining and later post-training behavior are treated as separate stages of model development. The current post-training direction is staged capability acquisition followed by consolidation into **one unified CetinLM lineage**, rather than treating each stage as an unrelated final product.
 
 ---
 

@@ -5,14 +5,15 @@
 <h1 align="center">CetinLM — Public Research Log</h1>
 
 <p align="center">
-  <strong>From-scratch language-model research. Built in public, without publishing the private blueprint.</strong>
+  <strong>From-scratch language-model research. Built in public, without publishing the private blueprint.</strong><br>
+  <em>The checkpoint is an output. The system that produces it is the research.</em>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Base--v1-active%20pretraining-111111" alt="Base-v1 active pretraining">
-  <img src="https://img.shields.io/badge/scale-1.18B-111111" alt="1.18B parameters">
+  <img src="https://img.shields.io/badge/scale-~1.18B-111111" alt="~1.18B parameters">
   <img src="https://img.shields.io/badge/tokenizer-48K-111111" alt="48K tokenizer">
-  <img src="https://img.shields.io/badge/frozen%20train%20tokens-11.39B-111111" alt="11.39B frozen training tokens">
+  <img src="https://img.shields.io/badge/processed-1.2B%2B%20tokens-111111" alt="1.2B+ processed tokens">
   <img src="https://img.shields.io/badge/hardware-1%C3%97%2016GB%20GPU-111111" alt="Single 16GB GPU">
 </p>
 
@@ -24,13 +25,11 @@
 
 ---
 
-## What this is
+## What this archive is
 
-This directory is the **public engineering history of CetinLM**, an independent language-model research program developed under **Me Force Technology** in Türkiye.
+This directory is the **public engineering history of CetinLM**, an independent language-model research and engineering program developed under **Me Force Technology** in Türkiye.
 
-It is not a marketing changelog and it is not a reproduction manual.
-
-We publish the parts that make the work verifiable and interesting — milestones, measurements, failures, system decisions, training progress and lessons — while keeping the exact implementation recipe private during active Base-v1 research.
+It is not a reproduction manual and it is not a marketing changelog. It records the parts of the work that make the research legible from the outside: milestones, measured outcomes, failed experiments, runtime lessons, validation trends, and the decisions that survived contact with the real system.
 
 > **Public by default for outcomes. Private by default for the blueprint.**
 
@@ -40,7 +39,7 @@ We publish the parts that make the work verifiable and interesting — milestone
 
 <table>
 <tr>
-<td width="25%"><strong>Model scale</strong><br>1.18B parameters</td>
+<td width="25%"><strong>Model scale</strong><br>~1.18B parameters</td>
 <td width="25%"><strong>Tokenizer</strong><br>48K vocabulary</td>
 <td width="25%"><strong>Frozen corpus</strong><br>11.39B unique train tokens</td>
 <td width="25%"><strong>Context</strong><br>2K base-training context</td>
@@ -48,37 +47,46 @@ We publish the parts that make the work verifiable and interesting — milestone
 <tr>
 <td><strong>Origin</strong><br>Trained from scratch</td>
 <td><strong>Hardware</strong><br>1× RTX 4070 Ti SUPER 16GB</td>
-<td><strong>Current run</strong><br>34M+ processed tokens</td>
+<td><strong>Current run</strong><br>1.2B+ processed tokens</td>
 <td><strong>Observed speed</strong><br>~4.4–4.5K tok/s</td>
 </tr>
 </table>
 
-The current Base-v1 run is still early. These numbers describe an **active research system**, not a finished model or a benchmark claim.
+At the 1.20B milestone, Base-v1 reached a new held-out best of **2.8982 validation loss / 18.142 perplexity**. This is evidence of improving next-token prediction on held-out data; it is **not** a claim that the raw Base checkpoint is already a finished assistant.
+
+[Read the 1.20B progress note →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
 
 ---
 
-## The last few weeks, compressed
+## CetinLM is a model factory, not a single checkpoint
 
-A few weeks ago, CetinLM was still moving from exploratory 1B-scale experiments toward a production-grade Base-v1 training system.
+The visible model is only one output of a larger engineering system.
 
-Since then we have:
+```text
+DATA ENGINEERING
+      ↓
+TOKENIZER
+      ↓
+PACKING + TRAINING CONTRACTS
+      ↓
+BASE PRETRAINING
+      ↓
+QUALIFICATION + TELEMETRY
+      ↓
+CHECKPOINT / RECOVERY
+      ↓
+EVALUATION + DIAGNOSTICS
+      ↓
+STAGED POST-TRAINING
+      ↓
+ONE CETINLM
+```
 
-- rebuilt and frozen the active tokenizer/data contracts;
-- moved to a new 1.18B Base-v1 generation and started again from scratch;
-- qualified packed-document isolation instead of assuming it was correct;
-- audited BOS/EOS behavior and real packed boundaries;
-- built fail-closed startup and runtime guards;
-- launched fresh Base-v1 production training;
-- caught a non-finite gradient event **before** an optimizer update and replayed the exact next step from checkpoint;
-- fixed an observability bug where an older abandoned run could contaminate scheduling state;
-- tested multiple optimizer, memory, batch, checkpointing, attention and loss-path ideas;
-- rejected several optimizations that looked good on paper or in microbenchmarks but lost on the actual training path;
-- retained one runtime/memory improvement because it survived production use;
-- profiled the real GPU workload to stop guessing about bottlenecks;
-- returned to a deliberately boring production configuration once the experiments stopped producing real wins;
-- continued the fresh run past **34M processed tokens** with stable finite training.
+CetinLM treats data preparation, tokenizer design, training runtime, failure recovery, evaluation, post-training, and future tool/memory systems as parts of the same research problem.
 
-That is the point of this archive: not to pretend every experiment worked, but to show that the system became stronger because bad ideas were allowed to lose.
+The goal is not to hide weak engineering behind more compute. The goal is to understand **why** the system works, measure where it fails, and scale only what survives.
+
+[Read the public Model Factory note →](./MODEL_FACTORY.md)
 
 ---
 
@@ -86,14 +94,14 @@ That is the point of this archive: not to pretend every experiment worked, but t
 
 <table>
 <tr>
-<td width="33%" valign="top"><strong>Measure before merging</strong><br><br>A theoretical speedup, elegant kernel or new optimizer idea is not an improvement until it wins on the real system.</td>
-<td width="33%" valign="top"><strong>Fail closed</strong><br><br>Data, runtime and training anomalies should stop the run before they silently damage state.</td>
-<td width="33%" valign="top"><strong>Keep negative results</strong><br><br>A rejected experiment still reduces uncertainty. We keep the evidence instead of rewriting history.</td>
+<td width="33%" valign="top"><strong>Measure before merging</strong><br><br>A theoretical speedup or elegant idea is not an improvement until it wins on the real system.</td>
+<td width="33%" valign="top"><strong>Fail closed</strong><br><br>Critical data/runtime/training anomalies should stop the run before they silently damage state.</td>
+<td width="33%" valign="top"><strong>Keep negative results</strong><br><br>A rejected experiment still reduces uncertainty. Failed ideas remain part of the engineering record.</td>
 </tr>
 <tr>
-<td valign="top"><strong>Separate signals</strong><br><br>Loss, generation quality, reasoning, safety and throughput answer different questions. One metric does not stand in for all of them.</td>
-<td valign="top"><strong>Prefer end-to-end evidence</strong><br><br>A fast isolated kernel can still produce a slower training system. Final decisions are made on realistic trajectories.</td>
-<td valign="top"><strong>Protect the active run</strong><br><br>Training progress is more valuable than endless knob-tuning. Once a configuration is qualified, changes need evidence.</td>
+<td valign="top"><strong>Separate signals</strong><br><br>Validation, raw generation, reasoning, safety and throughput answer different questions.</td>
+<td valign="top"><strong>Prefer end-to-end evidence</strong><br><br>A fast microbenchmark can still lose in real training. Production trajectory wins.</td>
+<td valign="top"><strong>Protect the active run</strong><br><br>Once a configuration is qualified, changes need evidence. Training progress is not a playground.</td>
 </tr>
 </table>
 
@@ -103,228 +111,138 @@ OBSERVE → MEASURE → HYPOTHESIZE → A/B TEST → KEEP WHAT SURVIVES → DOCU
 
 ---
 
-## What has been proven so far
+## What the run has demonstrated so far
 
 | Area | Public result | Status |
 |---|---|:---:|
-| Data / tokenizer identity | Active Base-v1 data and tokenizer contracts are frozen and validated before training | ✅ |
-| Packed-document behavior | Cross-document leakage is explicitly tested rather than assumed | ✅ |
-| Full-model execution | The real Base-v1 training path is qualified on the target GPU | ✅ |
-| Checkpoint recovery | Production state can be protected and replayed after an anomaly | ✅ |
-| Runtime observability | Training telemetry is tied to the active run lineage | ✅ |
-| Optimizer research | A custom optimizer-control experiment failed to beat the baseline and was rejected | ❌ kept as evidence |
-| Throughput experiments | Multiple seemingly attractive runtime changes failed realistic tests | ❌ kept as evidence |
-| Memory/runtime improvement | One execution optimization survived real production use | ✅ retained |
-| GPU profiling | The active workload was measured directly instead of optimized from intuition | ✅ |
-| Base-v1 production | Fresh-scratch run is active and has passed 34M processed tokens | 🟢 active |
+| From-scratch training | Base-v1 is training from random initialization | ✅ |
+| Single-GPU execution | ~1.18B Base-v1 runs on one 16GB consumer GPU | ✅ |
+| Data/tokenizer contracts | Frozen identities are validated before training | ✅ |
+| Packed-document behavior | Cross-document isolation is explicitly qualified | ✅ |
+| Checkpoint recovery | Recoverable state is preserved across interruptions | ✅ |
+| Runtime observability | Persistent telemetry follows the active lineage | ✅ |
+| Runtime research | Multiple attractive optimizations were tested and rejected when they lost end-to-end | ✅ |
+| Checkpoint memory pressure | Recent save-path hardening substantially reduced post-save reserved GPU memory in production observations | 🟢 active evidence |
+| Held-out learning | Validation improved from 3.0032 / 20.151 PPL at 900M to 2.8982 / 18.142 at 1.20B | 🟢 improving |
+| Base-v1 production | 1.2B+ processed tokens and continuing | 🟢 active |
+
+---
+
+## The trajectory matters more than one screenshot
+
+Recent public milestones show a consistent held-out trend:
+
+| Processed tokens | Validation loss | Perplexity |
+|---:|---:|---:|
+| 900M | 3.0032 | 20.151 |
+| 950M | 2.9787 | 19.663 |
+| 1.00B | 2.9537 | 19.176 |
+| 1.05B | 2.9420 | 18.953 |
+| 1.10B | 2.9238 | 18.612 |
+| 1.15B | 2.9094 | 18.346 |
+| **1.20B** | **2.8982** | **18.142** |
+
+Raw greedy generation remains a diagnostic signal rather than a product-quality claim. Base pretraining is judged primarily by held-out prediction, boundary health, broad source-family behavior and controlled diagnostics—not by pretending a raw Base checkpoint is already a chat model.
 
 ---
 
 ## Public research timeline
 
+### 2026-09-12 · Base-v1 crosses 1.20B processed tokens
+
+Base-v1 passed 1.20B processed tokens with a new validation best, stable throughput, healthy boundary signals, and repeated successful checkpoint cycles after recent runtime hardening.
+
+[Read the full 1.20B update →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
+
 ### 2026-09-09 · Base-v1 passes 34M production tokens
 
-The fresh Base-v1 run passed **34 million processed tokens** while remaining finite and stable under the active runtime safeguards.
+The first public production update documented the transition from preflight engineering into a sustained real training run.
 
-Recent public observations show:
-
-- loss continuing to move downward through the early run;
-- gradients remaining finite;
-- throughput holding around **4.4–4.5K tokens/s** on the single 16GB GPU;
-- no reason to reopen the recently closed performance campaign.
-
-[Read the full progress note →](./2026-09-09_BASE_V1_34M_PROGRESS.md)
-
----
+[Read the 34M historical note →](./2026-09-09_BASE_V1_34M_PROGRESS.md)
 
 ### 2026-09-08 · Runtime engineering campaign: closed
 
-We spent a focused cycle attacking the real training runtime from several directions: memory pressure, batch geometry, checkpointing, attention execution, loss execution, caching and kernel behavior.
-
-The most important outcome was not a giant speedup.
-
-It was learning which apparent wins **did not survive realistic training**.
+A focused runtime campaign tested memory, batch, checkpointing, attention, loss and execution ideas. Several plausible optimizations lost on the real trajectory and were rejected.
 
 [Read the runtime engineering recap →](./2026-09-08_RUNTIME_ENGINEERING_RECAP.md)
 
----
-
 ### 2026-09-07 · Base-v1 foundation frozen
 
-Before production, the project moved from an exploratory model into a controlled Base-v1 generation with a frozen tokenizer, frozen corpus identity, fixed model scale and explicit qualification gates.
+The active generation moved from exploratory work into a controlled Base-v1 with explicit qualification gates.
 
-That freeze matters because experiments become interpretable only when the system underneath them stops moving.
-
-[Read the Base-v1 foundation note →](./2026-09-07_BASE_V1_FOUNDATION_FREEZE.md)
+[Read the foundation note →](./2026-09-07_BASE_V1_FOUNDATION_FREEZE.md)
 
 ---
 
-## A few things we deliberately rejected
+## Post-training direction
 
-Some of the most valuable work never became a feature.
+Base-v1 is the foundation, not the final product.
 
-### A custom optimizer-control idea
-
-It was mathematically valid and interesting enough to test. Controlled comparisons did not show a quality win over the baseline, so it was rejected.
-
-### Bigger physical batches
-
-On paper, larger batches could reduce overhead. On the real target system, the memory/runtime tradeoff was worse. Rejected.
-
-### Less activation recomputation
-
-Reducing checkpointing sounded like an obvious speed path. The real geometry did not reward it. Rejected.
-
-### Autocast/cache reuse
-
-A plausible way to reduce repeated cast/copy work. No meaningful production speedup, with numerical concerns. Rejected.
-
-### Fused loss execution
-
-A promising way to collapse work around the output projection and loss. It did not produce a useful real win in this environment. Rejected.
-
-### Alternate attention backend
-
-A short benchmark looked significantly faster. A more realistic same-state optimizer trajectory later became dramatically slower. Rejected.
-
-That last result is one of the reasons this archive exists:
-
-> **microbenchmark speed is not production speed.**
-
----
-
-## The anomaly we did not ignore
-
-Early in the fresh run, a non-finite gradient appeared.
-
-The training guard stopped the update before optimizer state could be corrupted. We then replayed the exact next step from the saved checkpoint with deeper diagnostics. The failure did not reproduce and the replay remained finite.
-
-We did not “fix” the issue by weakening the guard, skipping the batch or pretending it did not happen.
-
-We kept the protection, kept the evidence, resumed from clean state, and watched the run continue normally.
-
-That is the kind of boring systems work that rarely fits in a launch post but matters enormously in a multi-week training job.
-
----
-
-## Why a single 16GB GPU matters to the research
-
-The point is **not** that large clusters are unnecessary.
-
-The point is that constrained hardware makes inefficiency visible.
-
-When there is nowhere to hide:
-
-- memory residency matters;
-- recomputation matters;
-- kernel choice matters;
-- data movement matters;
-- checkpoint semantics matter;
-- a few percent of throughput matters;
-- bad experimental methodology becomes expensive very quickly.
-
-The 16GB development platform is therefore a pressure test for engineering discipline, not the long-term ceiling of the CetinLM project.
-
----
-
-## What we publish — and what we do not
-
-<table>
-<tr>
-<th>Public</th>
-<th>Private during active Base-v1 research</th>
-</tr>
-<tr>
-<td valign="top">
-
-- model scale
-- tokenizer scale
-- corpus scale
-- training context class
-- hardware class
-- broad throughput observations
-- milestones
-- qualitative system design principles
-- experiment categories
-- KEEP / REJECT outcomes
-- public limitations
-- release status
-
-</td>
-<td valign="top">
-
-- exact architecture geometry
-- exact normalization configuration
-- exact positional constants
-- optimizer recipe and scheduling constants
-- batch/update recipe
-- internal corpus mixture
-- packing internals
-- kernel/backend configuration details
-- qualification thresholds
-- low-level checkpoint implementation details
-- implementation-specific recovery logic
-
-</td>
-</tr>
-</table>
-
-This boundary is intentional. We want the research to be visible and indexable without turning an active private implementation into a copy-paste blueprint.
-
----
-
-## Current status
+The current direction is staged post-training so regressions remain attributable while capabilities accumulate into **one unified CetinLM**:
 
 ```text
-CetinLM Base-v1
-├── from-scratch foundation       ✅
-├── tokenizer/data freeze         ✅
-├── fail-closed qualification     ✅
-├── fresh production launch       ✅
-├── runtime optimization cycle    ✅ closed
-├── 34M+ production tokens        ✅
-├── next milestone evaluation     ⏳
-├── base-model evaluation         ⏳
-├── post-training                 later
-└── public weights                not released
+Base
+  ↓
+Instruction
+  ↓
+Chat + Social
+  ↓
+Reasoning + Math
+  ↓
+Code
+  ↓
+Truthfulness + Safety + Preference
+  ↓
+Tools + Search + Memory
+  ↓
+Unified consolidation / replay
+  ↓
+ONE CETINLM
 ```
 
-The current job is intentionally simple now:
-
-> **Stop redesigning the engine. Let it train. Measure the next real milestone.**
+Exact post-training recipes are not frozen before measurement.
 
 ---
 
-## Data provenance
+## Public disclosure boundary
 
-Training-data transparency is part of the public research surface too. We publish the active third-party source families, their broad roles, recorded upstream license metadata and rights/attribution caveats — while keeping the exact corpus recipe private during active Base-v1 research.
+We publish:
 
-[Read the public data-provenance register →](./THIRD_PARTY_DATA.md)
+- broad model scale and context;
+- tokenizer size;
+- frozen-corpus scale;
+- processed-token milestones;
+- broad throughput;
+- validation trends;
+- high-level qualification and recovery philosophy;
+- experiment outcomes and negative results;
+- data provenance at a public-safe level.
+
+We do **not** publish the reproduction-critical private blueprint while active research is ongoing: exact architecture geometry, optimizer/LR recipe, precise mixture weights, internal thresholds, low-level recovery details, local manifests or kernel/backend tuning configuration.
 
 ---
 
-## Public notes
+## Public reference pages
 
-| Date | Entry | What it covers |
-|---|---|---|
-| 2026-09-09 | [Base-v1 34M+ Production Update](./2026-09-09_BASE_V1_34M_PROGRESS.md) | Early-run stability, throughput, current focus |
-| 2026-09-08 | [Runtime Engineering Recap](./2026-09-08_RUNTIME_ENGINEERING_RECAP.md) | Performance campaign, negative results, production decision |
-| Reference | [Public Data Provenance](./THIRD_PARTY_DATA.md) | Active third-party source families, upstream license metadata, attribution and disclosure boundary |
-| 2026-09-07 | [Base-v1 Foundation Freeze](./2026-09-07_BASE_V1_FOUNDATION_FREEZE.md) | Transition from exploratory work to a frozen Base-v1 research system |
-
-More public notes will be added only when something meaningful changes. Cosmetic churn is not a research milestone.
+| Page | Purpose |
+|---|---|
+| [Model Factory](./MODEL_FACTORY.md) | What CetinLM is building beyond one checkpoint |
+| [Technical Overview](./TECHNICAL_OVERVIEW.md) | Public-safe system architecture |
+| [Data Provenance](./THIRD_PARTY_DATA.md) | Third-party source families and disclosure boundary |
+| [1.20B Progress](./2026-09-12_BASE_V1_1_2B_PROGRESS.md) | Current training milestone and measured trajectory |
+| [34M Progress](./2026-09-09_BASE_V1_34M_PROGRESS.md) | Historical early-production milestone |
+| [Runtime Engineering Recap](./2026-09-08_RUNTIME_ENGINEERING_RECAP.md) | What won, what lost, and why |
+| [Base-v1 Foundation Freeze](./2026-09-07_BASE_V1_FOUNDATION_FREEZE.md) | Transition into controlled Base-v1 production |
 
 ---
 
 ## Identity
 
-**CetinLM** is developed independently under **Me Force Technology**.
+**CetinLM** is developed independently under **Me Force Technology** in Türkiye.
 
-The research originates in **Türkiye** and is aimed at a broader question than one 1B model:
+The project is not an argument that compute does not matter. It is an experiment in how much more useful work can be extracted when **data, architecture, training math, measurement and systems engineering are treated as one optimization problem**.
 
-> How much capability, reliability and efficiency can disciplined language-model engineering extract before “just use more scale” becomes the default answer?
-
-Base-v1 is the first serious instrument for answering that question.
+> **CetinLM is not proof that compute does not matter. It is proof that engineering still does.**
 
 ---
 
