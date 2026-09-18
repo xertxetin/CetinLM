@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Base--v1-active%20pretraining-111111" alt="Base-v1 active pretraining">
   <img src="https://img.shields.io/badge/scale-~1.18B-111111" alt="~1.18B parameters">
   <img src="https://img.shields.io/badge/tokenizer-48K-111111" alt="48K tokenizer">
-  <img src="https://img.shields.io/badge/processed-1.2B%2B%20tokens-111111" alt="1.2B+ processed tokens">
+  <img src="https://img.shields.io/badge/processed-3.15B%2B%20tokens-111111" alt="3.15B+ processed tokens">
   <img src="https://img.shields.io/badge/hardware-1%C3%97%2016GB%20GPU-111111" alt="Single 16GB GPU">
 </p>
 
@@ -47,14 +47,14 @@ It is not a reproduction manual and it is not a marketing changelog. It records 
 <tr>
 <td><strong>Origin</strong><br>Trained from scratch</td>
 <td><strong>Hardware</strong><br>1× RTX 4070 Ti SUPER 16GB</td>
-<td><strong>Current run</strong><br>1.2B+ processed tokens</td>
+<td><strong>Current run</strong><br>3.15B+ processed tokens</td>
 <td><strong>Observed speed</strong><br>~4.4–4.5K tok/s</td>
 </tr>
 </table>
 
-At the 1.20B milestone, Base-v1 reached a new held-out best of **2.8982 validation loss / 18.142 perplexity**. This is evidence of improving next-token prediction on held-out data; it is **not** a claim that the raw Base checkpoint is already a finished assistant.
+At the 3.15B milestone, Base-v1 reached a new held-out best of **2.623482 validation loss / 13.784 perplexity**. Between 3.00B and 3.15B, every 50M validation milestone produced a new best checkpoint. This is evidence of continued held-out next-token learning; it is **not** a claim that the raw Base checkpoint is already a finished assistant.
 
-[Read the 1.20B progress note →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
+Historical milestone: [read the 1.20B progress note →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
 
 ---
 
@@ -123,30 +123,35 @@ OBSERVE → MEASURE → HYPOTHESIZE → A/B TEST → KEEP WHAT SURVIVES → DOCU
 | Runtime observability | Persistent telemetry follows the active lineage | ✅ |
 | Runtime research | Multiple attractive optimizations were tested and rejected when they lost end-to-end | ✅ |
 | Checkpoint memory pressure | Recent save-path hardening substantially reduced post-save reserved GPU memory in production observations | 🟢 active evidence |
-| Held-out learning | Validation improved from 3.0032 / 20.151 PPL at 900M to 2.8982 / 18.142 at 1.20B | 🟢 improving |
-| Base-v1 production | 1.2B+ processed tokens and continuing | 🟢 active |
+| Held-out learning | Validation reached 2.623482 / 13.784 PPL at 3.15B, with continued 50M-step best checkpoints in the latest window | 🟢 improving |
+| Base-v1 production | 3.15B+ processed tokens and continuing | 🟢 active |
 
 ---
 
 ## The trajectory matters more than one screenshot
 
-Recent public milestones show a consistent held-out trend:
+Recent milestones continue to move even at 50M-token resolution:
 
 | Processed tokens | Validation loss | Perplexity |
 |---:|---:|---:|
-| 900M | 3.0032 | 20.151 |
-| 950M | 2.9787 | 19.663 |
-| 1.00B | 2.9537 | 19.176 |
-| 1.05B | 2.9420 | 18.953 |
-| 1.10B | 2.9238 | 18.612 |
-| 1.15B | 2.9094 | 18.346 |
-| **1.20B** | **2.8982** | **18.142** |
+| 2.80B | 2.656237 | 14.243 |
+| 2.85B | 2.647877 | 14.124 |
+| 2.90B | 2.645866 | 14.096 |
+| 2.95B | 2.642277 | 14.045 |
+| 3.00B | 2.633264 | 13.919 |
+| 3.05B | 2.630962 | 13.887 |
+| 3.10B | 2.628029 | 13.846 |
+| **3.15B** | **2.623482** | **13.784** |
 
-Raw greedy generation remains a diagnostic signal rather than a product-quality claim. Base pretraining is judged primarily by held-out prediction, boundary health, broad source-family behavior and controlled diagnostics—not by pretending a raw Base checkpoint is already a chat model.
+Raw greedy generation remains diagnostic rather than a product-quality claim. Base pretraining is judged primarily by held-out prediction, boundary health, broad source-family behavior and controlled diagnostics—not by pretending a raw Base checkpoint is already a chat model.
 
 ---
 
 ## Public research timeline
+
+### 2026-09-18 · Base-v1 crosses 3.15B processed tokens
+
+The run passed 3.15B processed tokens with a new held-out best of 2.623482 / 13.784 PPL. The 3.00B, 3.05B, 3.10B and 3.15B checkpoints each improved the previous validation best.
 
 ### 2026-09-12 · Base-v1 crosses 1.20B processed tokens
 
@@ -181,21 +186,21 @@ Base-v1 is the foundation, not the final product.
 The current direction is staged post-training so regressions remain attributable while capabilities accumulate into **one unified CetinLM**:
 
 ```text
-Base
+Base-v1 [protected]
   ↓
-Instruction
+Instruction-focused bootstrap
   ↓
-Chat + Social
+Balanced multi-task SFT
+  ├── Instruction
+  ├── Chat + Social
+  ├── Reasoning + Math
+  ├── Code
+  ├── Truthfulness + Safety
+  ├── Tools + Search + Memory
+  └── Computer Use / Interactive Agents
+  + small qualified Base/general replay
   ↓
-Reasoning + Math
-  ↓
-Code
-  ↓
-Truthfulness + Safety + Preference
-  ↓
-Tools + Search + Memory
-  ↓
-Unified consolidation / replay
+Mixed consolidation
   ↓
 ONE CETINLM
 ```
