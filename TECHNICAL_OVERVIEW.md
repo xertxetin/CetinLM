@@ -38,7 +38,7 @@ The architecture is developed as part of the CetinLM project, while reproduction
 
 ## Data System
 
-The Base-v1 training corpus contains approximately **11.39B unique frozen training tokens**.
+The Base-v1 training corpus contains approximately **11.39B unique frozen training tokens**. This is the deduplicated corpus size; it is distinct from the **20B processed-token training-exposure horizon**, which can revisit qualified material through bounded replay without changing the unique-token count.
 
 The data system combines:
 

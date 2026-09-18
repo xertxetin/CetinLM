@@ -54,7 +54,9 @@ It is not a reproduction manual and it is not a marketing changelog. It records 
 
 At the 3.15B milestone, Base-v1 reached a new held-out best of **2.623482 validation loss / 13.784 perplexity**. Between 3.00B and 3.15B, every 50M validation milestone produced a new best checkpoint. This is evidence of continued held-out next-token learning; it is **not** a claim that the raw Base checkpoint is already a finished assistant.
 
-Historical milestone: [read the 1.20B progress note →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
+> **Corpus size and training exposure are different quantities.** The frozen corpus contains **11.39B unique deduplicated training tokens**. The Base-v1 schedule is allowed to process up to **20B exposure tokens** by covering that fixed corpus and then applying bounded, source-aware replay. Replayed tokens increase training exposure; they do not increase the unique-corpus count.
+
+[Read the full 3.15B progress note →](./2026-09-18_BASE_V1_3_15B_PROGRESS.md) · Historical milestone: [1.20B →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
 
 ---
 
@@ -153,6 +155,8 @@ Raw greedy generation remains diagnostic rather than a product-quality claim. Ba
 
 The run passed 3.15B processed tokens with a new held-out best of 2.623482 / 13.784 PPL. The 3.00B, 3.05B, 3.10B and 3.15B checkpoints each improved the previous validation best.
 
+[Read the full 3.15B update →](./2026-09-18_BASE_V1_3_15B_PROGRESS.md)
+
 ### 2026-09-12 · Base-v1 crosses 1.20B processed tokens
 
 Base-v1 passed 1.20B processed tokens with a new validation best, stable throughput, healthy boundary signals, and repeated successful checkpoint cycles after recent runtime hardening.
@@ -234,7 +238,8 @@ We do **not** publish the reproduction-critical private blueprint while active r
 | [Model Factory](./MODEL_FACTORY.md) | What CetinLM is building beyond one checkpoint |
 | [Technical Overview](./TECHNICAL_OVERVIEW.md) | Public-safe system architecture |
 | [Data Provenance](./THIRD_PARTY_DATA.md) | Third-party source families and disclosure boundary |
-| [1.20B Progress](./2026-09-12_BASE_V1_1_2B_PROGRESS.md) | Current training milestone and measured trajectory |
+| [3.15B Progress](./2026-09-18_BASE_V1_3_15B_PROGRESS.md) | Current training milestone and measured trajectory |
+| [1.20B Progress](./2026-09-12_BASE_V1_1_2B_PROGRESS.md) | Historical sustained-training milestone |
 | [34M Progress](./2026-09-09_BASE_V1_34M_PROGRESS.md) | Historical early-production milestone |
 | [Runtime Engineering Recap](./2026-09-08_RUNTIME_ENGINEERING_RECAP.md) | What won, what lost, and why |
 | [Base-v1 Foundation Freeze](./2026-09-07_BASE_V1_FOUNDATION_FREEZE.md) | Transition into controlled Base-v1 production |
