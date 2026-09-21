@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Base--v1-active%20pretraining-111111" alt="Base-v1 active pretraining">
   <img src="https://img.shields.io/badge/scale-~1.18B-111111" alt="~1.18B parameters">
   <img src="https://img.shields.io/badge/tokenizer-48K-111111" alt="48K tokenizer">
-  <img src="https://img.shields.io/badge/processed-3.15B%2B%20tokens-111111" alt="3.15B+ processed tokens">
+  <img src="https://img.shields.io/badge/processed-4.10B%2B%20tokens-111111" alt="4.10B+ processed tokens">
   <img src="https://img.shields.io/badge/hardware-1%C3%97%2016GB%20GPU-111111" alt="Single 16GB GPU">
 </p>
 
@@ -47,16 +47,16 @@ It is not a reproduction manual and it is not a marketing changelog. It records 
 <tr>
 <td><strong>Origin</strong><br>Trained from scratch</td>
 <td><strong>Hardware</strong><br>1× RTX 4070 Ti SUPER 16GB</td>
-<td><strong>Current run</strong><br>3.15B+ processed tokens</td>
+<td><strong>Current run</strong><br>4.10B+ processed tokens</td>
 <td><strong>Observed speed</strong><br>~4.4–4.5K tok/s</td>
 </tr>
 </table>
 
-At the 3.15B milestone, Base-v1 reached a new held-out best of **2.623482 validation loss / 13.784 perplexity**. Between 3.00B and 3.15B, every 50M validation milestone produced a new best checkpoint. This is evidence of continued held-out next-token learning; it is **not** a claim that the raw Base checkpoint is already a finished assistant.
+At the 4.10B milestone, Base-v1 reached a new held-out best of **2.555976 validation loss / 12.884 perplexity**. The recent 3.90B → 4.10B window moved from 2.567553 to 2.555976 while validation continued at roughly 50M-token cadence. Teacher-forced EOS boundary health remained stable (`P(EOS@end)=0.3592`, median EOS rank 2.0). This is evidence of continued held-out next-token learning; it is **not** a claim that the raw Base checkpoint is already a finished assistant.
 
 > **Corpus size and training exposure are different quantities.** The frozen corpus contains **11.39B unique deduplicated training tokens**. The Base-v1 schedule is allowed to process up to **20B exposure tokens** by covering that fixed corpus and then applying bounded, source-aware replay. Replayed tokens increase training exposure; they do not increase the unique-corpus count.
 
-[Read the full 3.15B progress note →](./2026-09-18_BASE_V1_3_15B_PROGRESS.md) · Historical milestone: [1.20B →](./2026-09-12_BASE_V1_1_2B_PROGRESS.md)
+[Read the full 4.10B progress note →](./2026-09-21_BASE_V1_4_10B_PROGRESS.md) · Historical milestone: [3.15B →](./2026-09-18_BASE_V1_3_15B_PROGRESS.md)
 
 ---
 
@@ -125,8 +125,8 @@ OBSERVE → MEASURE → HYPOTHESIZE → A/B TEST → KEEP WHAT SURVIVES → DOCU
 | Runtime observability | Persistent telemetry follows the active lineage | ✅ |
 | Runtime research | Multiple attractive optimizations were tested and rejected when they lost end-to-end | ✅ |
 | Checkpoint memory pressure | Recent save-path hardening substantially reduced post-save reserved GPU memory in production observations | 🟢 active evidence |
-| Held-out learning | Validation reached 2.623482 / 13.784 PPL at 3.15B, with continued 50M-step best checkpoints in the latest window | 🟢 improving |
-| Base-v1 production | 3.15B+ processed tokens and continuing | 🟢 active |
+| Held-out learning | Validation reached 2.555976 / 12.884 PPL at 4.10B; the latest 200M-token window continued to improve overall | 🟢 improving |
+| Base-v1 production | 4.10B+ processed tokens and continuing | 🟢 active |
 
 ---
 
@@ -136,20 +136,25 @@ Recent milestones continue to move even at 50M-token resolution:
 
 | Processed tokens | Validation loss | Perplexity |
 |---:|---:|---:|
-| 2.80B | 2.656237 | 14.243 |
-| 2.85B | 2.647877 | 14.124 |
-| 2.90B | 2.645866 | 14.096 |
-| 2.95B | 2.642277 | 14.045 |
-| 3.00B | 2.633264 | 13.919 |
-| 3.05B | 2.630962 | 13.887 |
-| 3.10B | 2.628029 | 13.846 |
-| **3.15B** | **2.623482** | **13.784** |
+| 3.80B | 2.577079 | 13.159 |
+| 3.85B | 2.576399 | 13.150 |
+| 3.90B | 2.567553 | 13.034 |
+| 3.95B | 2.566619 | 13.022 |
+| 4.00B | 2.566363 | 13.018 |
+| 4.05B | 2.563374 | 12.980 |
+| **4.10B** | **2.555976** | **12.884** |
 
-Raw greedy generation remains diagnostic rather than a product-quality claim. Base pretraining is judged primarily by held-out prediction, boundary health, broad source-family behavior and controlled diagnostics—not by pretending a raw Base checkpoint is already a chat model.
+Raw greedy generation remains diagnostic rather than a product-quality claim. At 4.00B, a separate 1,000-sample web-balanced generation-health run recorded **0 loop incidents, 0 severe loops and 0.000% measured repetition burden** under its sampled policy; raw-greedy stress probes are still kept separately so failure modes remain visible instead of being hidden. Base pretraining is judged primarily by held-out prediction, boundary health, broad source-family behavior and controlled diagnostics—not by pretending a raw Base checkpoint is already a chat model.
 
 ---
 
 ## Public research timeline
+
+### 2026-09-21 · Base-v1 crosses 4.10B processed tokens
+
+Base-v1 reached a new held-out best of **2.555976 validation loss / 12.884 PPL**. The 3.90B → 4.10B window remained net-improving, teacher-forced EOS boundary health stayed stable, and the 4.00B sampled generation-health run recorded 0/1000 loop incidents while raw-greedy stress remained separately visible.
+
+[Read the full 4.10B update →](./2026-09-21_BASE_V1_4_10B_PROGRESS.md)
 
 ### 2026-09-18 · Base-v1 crosses 3.15B processed tokens
 
@@ -238,7 +243,8 @@ We do **not** publish the reproduction-critical private blueprint while active r
 | [Model Factory](./MODEL_FACTORY.md) | What CetinLM is building beyond one checkpoint |
 | [Technical Overview](./TECHNICAL_OVERVIEW.md) | Public-safe system architecture |
 | [Data Provenance](./THIRD_PARTY_DATA.md) | Third-party source families and disclosure boundary |
-| [3.15B Progress](./2026-09-18_BASE_V1_3_15B_PROGRESS.md) | Current training milestone and measured trajectory |
+| [4.10B Progress](./2026-09-21_BASE_V1_4_10B_PROGRESS.md) | Current training milestone, validation/EOS snapshot and generation-health separation |
+| [3.15B Progress](./2026-09-18_BASE_V1_3_15B_PROGRESS.md) | Historical training milestone and measured trajectory |
 | [1.20B Progress](./2026-09-12_BASE_V1_1_2B_PROGRESS.md) | Historical sustained-training milestone |
 | [34M Progress](./2026-09-09_BASE_V1_34M_PROGRESS.md) | Historical early-production milestone |
 | [Runtime Engineering Recap](./2026-09-08_RUNTIME_ENGINEERING_RECAP.md) | What won, what lost, and why |
