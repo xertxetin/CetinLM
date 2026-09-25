@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Acoustic Living Orb — Truly Shaped by Sound & Voice</title>
+  <meta name="description" content="Truly sound-shaped, dancing 60fps living fluid Orb visualizer. Directly deforms to voice frequencies, vowels, and musical beats using real-time radial FFT spectrum mapping.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       Acoustic Sound-Shaped Living Orb — Single File Architecture
+       Design: Apple Intelligence / OpenAI GPT-4o Real FFT Morphing
+       ========================================================================== */
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --bg-base: #050508;
+      --bg-surface: #0f1016;
+      --bg-surface-elevated: #181922;
+      --bg-hover: #22232f;
+      --bg-border: rgba(255, 255, 255, 0.08);
+      --bg-border-active: rgba(255, 255, 255, 0.28);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.45);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 24px;
+      --radius-full: 9999px;
+    }
+
+    html.light {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --bg-hover: #e2e8f0;
+      --bg-border: rgba(0, 0, 0, 0.08);
+      --bg-border-active: rgba(0, 0, 0, 0.25);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      user-select: none;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* Ambient Dynamic Aura */
+    .ambient-backdrop-aura {
+      position: fixed;
+      top: 36%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 820px;
+      height: 820px;
+      border-radius: 50%;
+      filter: blur(160px);
+      pointer-events: none;
+      opacity: 0.38;
+      z-index: 0;
+      transition: background 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.95rem 1.75rem;
+      border-bottom: 1px solid var(--bg-border);
+      background: rgba(5, 5, 8, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    html.light .topbar {
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .pulse-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 12px #10b981;
+      animation: indicatorPulse 2.2s infinite ease-in-out;
+    }
+
+    @keyframes indicatorPulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 16px #10b981; }
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .btn-action-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.95rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      color: var(--text-main);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+    }
+
+    .btn-action-ghost:hover {
+      background: var(--bg-hover);
+      border-color: var(--bg-border-active);
+      transform: translateY(-1px);
+    }
+
+    .btn-icon-round {
+      width: 2.35rem;
+      height: 2.35rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon-round:hover {
+      background: var(--bg-hover);
+      transform: scale(1.06);
+    }
+
+    /* Main Showcase Stage */
+    .stage-container {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1.5rem 3rem;
+      max-width: 1040px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Status HUD Header */
+    .status-hud {
+      text-align: center;
+      max-width: 650px;
+      margin-bottom: 0.5rem;
+    }
+
+    .hud-state-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .hud-state-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hud-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.35rem;
+      background: linear-gradient(180deg, var(--text-main) 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hud-desc {
+      font-size: 0.925rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Live Visualizer Bar Gauge (Proves Audio Reactivity) */
+    .spectrum-bar-deck {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      height: 28px;
+      width: 100%;
+      max-width: 320px;
+      margin: 0.85rem auto 0;
+      padding: 4px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-full);
+    }
+
+    .spec-bar {
+      flex: 1;
+      height: 4px;
+      min-height: 4px;
+      max-height: 22px;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: height 0.06s ease;
+      opacity: 0.85;
+    }
+
+    /* Living Orb Interactive Canvas Stage */
+    .orb-stage-wrapper {
+      position: relative;
+      width: 420px;
+      height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0.5rem 0 1rem;
+      perspective: 1000px;
+    }
+
+    .orb-stage-wrapper:active {
+      cursor: grabbing;
+    }
+
+    @media (max-width: 640px) {
+      .orb-stage-wrapper {
+        width: 320px;
+        height: 320px;
+      }
+    }
+
+    #openai-orb-canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      touch-action: none;
+    }
+
+    /* Transcript Card */
+    .hud-transcript-card {
+      margin-top: 0.5rem;
+      padding: 0.75rem 1.35rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      color: var(--text-main);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .hud-transcript-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px -5px var(--accent-glow);
+    }
+
+    /* Modular Controls Deck */
+    .controls-deck {
+      width: 100%;
+      max-width: 860px;
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: 0 24px 48px -15px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 1.35rem;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .control-label {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Theme Chips */
+    .theme-chips-row {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .theme-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-hover);
+      border: 1px solid var(--bg-border);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .theme-chip:hover {
+      background: var(--bg-surface-elevated);
+      border-color: var(--bg-border-active);
+      transform: translateY(-1px);
+    }
+
+    .theme-chip.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      box-shadow: 0 0 14px -3px var(--accent-glow);
+    }
+
+    .theme-chip .color-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+    }
+
+    /* State Segmented Control */
+    .segmented-control {
+      display: flex;
+      background: var(--bg-hover);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-full);
+      padding: 0.25rem;
+      gap: 0.25rem;
+    }
+
+    .seg-btn {
+      flex: 1;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-full);
+      background: transparent;
+      border: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .seg-btn:hover {
+      color: var(--text-main);
+    }
+
+    .seg-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Slider Row */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .custom-range {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-hover);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Acoustic Demo Buttons */
+    .demo-actions-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-acoustic-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 1.05rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-hover);
+      border: 1px solid var(--bg-border);
+      color: var(--text-main);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-acoustic-demo:hover {
+      background: var(--bg-surface-elevated);
+      border-color: var(--bg-border-active);
+      transform: translateY(-1px);
+    }
+
+    .btn-acoustic-demo.primary {
+      background: var(--text-main);
+      color: var(--bg-base);
+      border-color: transparent;
+    }
+
+    .btn-acoustic-demo.primary:hover {
+      opacity: 0.92;
+    }
+
+    .btn-acoustic-demo.active {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: #10b981;
+      color: #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    }
+
+    /* Interactive AI Sandbox Form */
+    .ai-sandbox-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+    }
+
+    .ai-input {
+      flex: 1;
+      background: var(--bg-hover);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-full);
+      padding: 0.65rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text-main);
+      outline: none;
+      font-family: var(--font-sans);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ai-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Code Embed & API Documentation Box */
+    .code-docs-section {
+      width: 100%;
+      max-width: 860px;
+      margin-top: 1.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .code-docs-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .code-docs-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .code-snippet-wrap {
+      position: relative;
+      background: var(--bg-base);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .code-snippet {
+      padding: 1rem 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-border);
+      color: var(--text-main);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 0.6rem 1.25rem;
+      border-radius: var(--radius-full);
+      background: var(--text-main);
+      color: var(--bg-base);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Aura Glow -->
+  <div id="ambient-aura" class="ambient-backdrop-aura"></div>
+
+  <!-- Top Global Header -->
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-pill">
+        <span class="pulse-indicator"></span>
+        <span>Acoustic Living Orb</span>
+      </div>
+      <span style="font-size: 0.8125rem; color: var(--text-muted); font-weight: 500;">Real FFT Sound-Morphing</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn-action-ghost" onclick="copyIntegrationCode()" title="Copy Integration Code">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg>
+        <span>Copy Code</span>
+      </button>
+
+      <button class="btn-icon-round" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" id="theme-icon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </button>
+
+      <a href="/chat" class="btn-action-ghost" title="Back to CetinLM Chat">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        <span>App</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Stage -->
+  <main class="stage-container">
+
+    <!-- Status HUD -->
+    <div class="status-hud">
+      <div class="hud-state-pill">
+        <span class="dot" id="hud-dot"></span>
+        <span id="hud-state-label">STATE: IDLE · READY FOR SOUND</span>
+      </div>
+      <h1 class="hud-title" id="hud-title">Acoustic Living Orb</h1>
+      <p class="hud-desc" id="hud-desc">
+        Genuinely shaped by and dancing with real sound frequencies (Bass = core pulse, Mids = vocal vowel lobes, Treble = ripple shimmer).
+      </p>
+
+      <!-- Live Spectrum Bar Gauge -->
+      <div class="spectrum-bar-deck" id="spectrum-bars">
+        <!-- 16 Real-Time Frequency Equalizer Bars -->
+      </div>
+    </div>
+
+    <!-- The 60fps Living Orb Canvas -->
+    <div class="orb-stage-wrapper" id="orb-wrapper" title="Drag to stretch jelly · Click for shockwave">
+      <canvas id="openai-orb-canvas" width="840" height="840"></canvas>
+    </div>
+
+    <!-- Transcript / Feedback HUD -->
+    <div class="hud-transcript-card" id="hud-transcript">
+      <span>Click "Vowel Speech Demo" or "Bass & Beat" to watch the Orb physically dance to the acoustic frequencies!</span>
+    </div>
+
+    <!-- Modular Controls Deck -->
+    <div class="controls-deck">
+      <div class="controls-grid">
+
+        <!-- Theme Preset Palette -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Aesthetic Theme / Persona</span>
+            <span id="active-theme-label" style="color: var(--accent);">Apple Intelligence</span>
+          </div>
+          <div class="theme-chips-row">
+            <button class="theme-chip active" onclick="switchTheme('siri')">
+              <span class="color-swatch" style="background: linear-gradient(135deg, #ec4899, #38bdf8, #818cf8);"></span>
+              <span>Apple Intelligence</span>
+            </button>
+            <button class="theme-chip" onclick="switchTheme('vale')">
+              <span class="color-swatch" style="background: radial-gradient(circle, #38bdf8, #818cf8);"></span>
+              <span>Vale (GPT-4o)</span>
+            </button>
+            <button class="theme-chip" onclick="switchTheme('sol')">
+              <span class="color-swatch" style="background: radial-gradient(circle, #fbbf24, #f97316);"></span>
+              <span>Sol (Warm Amber)</span>
+            </button>
+            <button class="theme-chip" onclick="switchTheme('maple')">
+              <span class="color-swatch" style="background: radial-gradient(circle, #f472b6, #db2777);"></span>
+              <span>Maple (Sakura)</span>
+            </button>
+            <button class="theme-chip" onclick="switchTheme('alp')">
+              <span class="color-swatch" style="background: radial-gradient(circle, #2dd4bf, #0d9488);"></span>
+              <span>Alp (Emerald)</span>
+            </button>
+            <button class="theme-chip" onclick="switchTheme('obsidian')">
+              <span class="color-swatch" style="background: radial-gradient(circle, #a855f7, #ec4899);"></span>
+              <span>Obsidian (Dark Matter)</span>
+            </button>
+            <button class="theme-chip" onclick="switchTheme('glacier')">
+              <span class="color-swatch" style="background: radial-gradient(circle, #e0f2fe, #38bdf8);"></span>
+              <span>Glacier (Cyber Pure)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Conversational State -->
+        <div class="control-group">
+          <div class="control-label">
+            <span>Conversational Neural State</span>
+          </div>
+          <div class="segmented-control">
+            <button class="seg-btn active" onclick="switchState('idle')">Idle</button>
+            <button class="seg-btn" onclick="switchState('listening')">Listening</button>
+            <button class="seg-btn" onclick="switchState('thinking')">Thinking</button>
+            <button class="seg-btn" onclick="switchState('speaking')">Speaking</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Real Sound Test Demos (Proof of Sound Shaping) -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Acoustic Dancing Demos (Proof of Real Sound Shaping)</span>
+        </div>
+        <div class="demo-actions-row">
+          <button class="btn-acoustic-demo primary" id="btn-vowel-demo" onclick="playVowelMorphDemo()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+            <span>Play Vowel Dance (Ooo → Aaa → Eee → Sss)</span>
+          </button>
+
+          <button class="btn-acoustic-demo" id="btn-beat-demo" onclick="playBassBeatDemo()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            <span>Play Bass & Beat Groove</span>
+          </button>
+
+          <button class="btn-acoustic-demo" id="btn-toggle-mic" onclick="toggleMicrophone()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <span>Live Microphone Feed</span>
+          </button>
+
+          <button class="btn-acoustic-demo" onclick="document.getElementById('audio-file-input').click()">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Load Your Song/Audio</span>
+          </button>
+          <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioFileUpload(this.files[0])">
+        </div>
+      </div>
+
+      <!-- Sensitivity & Manual Amplitude Slider -->
+      <div class="controls-grid" style="align-items: center;">
+        <div class="control-group">
+          <div class="control-label">
+            <span>Acoustic Deformation Intensity</span>
+            <span id="intensity-display">1.4x</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" min="50" max="250" value="140" class="custom-range" id="intensity-slider" oninput="handleIntensityChange(this.value)">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Direct Audio Amplitude Feed (0.0 — 1.0)</span>
+            <span id="vol-display">0.00</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" value="0" class="custom-range" id="volume-slider" oninput="handleManualVolume(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed Your AI Data (Direct Text/Speech Stream Simulator) -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>Feed Your AI Data: Speech & Text Stream</span>
+        </div>
+        <form class="ai-sandbox-form" onsubmit="handleAISandboxSubmit(event)">
+          <input 
+            type="text" 
+            id="ai-text-input" 
+            class="ai-input" 
+            placeholder="Type any sentence (e.g. 'Hello! I am CetinLM, dancing to every word')..."
+            value="Merhaba! Ben CetinLM, her ses frekansında gerçek zamanlı dans ediyorum.">
+          <button type="submit" class="btn-acoustic-demo primary">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Feed AI Stream</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modular Integration Docs & Code Snippet -->
+    <div class="code-docs-section">
+      <div class="code-docs-header">
+        <div>
+          <h2 class="code-docs-title">How to hook into your own AI audio stream (Direct API)</h2>
+          <p style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Feed your WebAudio Analyser frequency bins directly to <code>orb.feedFrequencyData()</code> for authentic sound dancing:
+          </p>
+        </div>
+        <button class="copy-btn" onclick="copyIntegrationCode()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          <span>Copy Snippet</span>
+        </button>
+      </div>
+
+      <div class="code-snippet-wrap">
+        <pre class="code-snippet" id="snippet-code">// 1. Initialize the Living Orb
+const orb = new OpenAIOrb({
+  canvas: document.getElementById('my-canvas'),
+  theme: 'siri', // 'siri' | 'vale' | 'sol' | 'maple' | 'alp' | 'obsidian' | 'glacier'
+  state: 'idle'
+});
+
+// 2. Feed Real FFT Audio Spectrum (Uint8Array from your WebAudio Analyser):
+// This makes the orb physically deform and dance to the exact pitch & frequencies:
+analyser.getByteFrequencyData(freqDataArray);
+orb.feedFrequencyData(freqDataArray);
+
+// 3. Or feed an HTMLAudioElement / MediaStream directly:
+orb.connectAudioElement(myAudioEl);
+
+// 4. Or feed speech synthesis / AI text stream:
+orb.feedAIText("Hello from your custom AI model!");</pre>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast">Code copied to clipboard!</div>
+
+  <!-- ==========================================================================
+       MODULAR ZERO-DEPENDENCY ACOUSTIC LIVING ORB ENGINE SCRIPT
+       ========================================================================== -->
+  <script>
+    /**
+     * Acoustic Synthesizer — Produces genuine vocal formants and rhythmic beats
+     * with zero external audio assets!
+     */
+    class AcousticSynth {
+      constructor() {
+        this.ctx = null;
+        this.currentDemo = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      stop() {
+        if (this.currentDemo) {
+          clearInterval(this.currentDemo);
+          this.currentDemo = null;
+        }
+      }
+
+      // Plays realistic human vocal formants ("Ooo" -> "Aaa" -> "Eee" -> "Sss")
+      playVowels(orbInstance, onProgress, onEnd) {
+        this.init();
+        this.stop();
+        const ctx = this.ctx;
+
+        // Vowel formant frequencies [F1, F2]
+        const vowels = [
+          { name: 'Oooo (Deep Vocal Bass)', f1: 300, f2: 800, dur: 1100 },
+          { name: 'Aaaa (Open Chest Resonant)', f1: 750, f2: 1200, dur: 1100 },
+          { name: 'Eeee (Bright High Formant)', f1: 280, f2: 2300, dur: 1100 },
+          { name: 'Ssssh (Crisp Sibilance Treble)', f1: 3500, f2: 6000, isNoise: true, dur: 900 }
+        ];
+
+        let index = 0;
+        const playNext = () => {
+          if (index >= vowels.length) {
+            orbInstance.setState('idle');
+            if (onEnd) onEnd();
+            return;
+          }
+
+          const v = vowels[index];
+          if (onProgress) onProgress(v.name);
+          orbInstance.setState('speaking');
+
+          const now = ctx.currentTime;
+          const masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime(0, now);
+          masterGain.gain.linearRampToValueAtTime(0.22, now + 0.1);
+          masterGain.gain.setValueAtTime(0.22, now + v.dur / 1000 - 0.15);
+          masterGain.gain.linearRampToValueAtTime(0, now + v.dur / 1000);
+
+          if (v.isNoise) {
+            // White noise buffer for fricative consonant (treble ripple test)
+            const bufferSize = ctx.sampleRate * (v.dur / 1000);
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+              data[i] = Math.random() * 2 - 1;
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(4500, now);
+            filter.Q.setValueAtTime(2.5, now);
+
+            noise.connect(filter);
+            filter.connect(masterGain);
+            noise.start(now);
+          } else {
+            // Glottal source pulse + 2 formant filters
+            const osc = ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(130 + (index % 2) * 25, now);
+
+            const filter1 = ctx.createBiquadFilter();
+            filter1.type = 'bandpass';
+            filter1.frequency.setValueAtTime(v.f1, now);
+            filter1.Q.setValueAtTime(5, now);
+
+            const filter2 = ctx.createBiquadFilter();
+            filter2.type = 'bandpass';
+            filter2.frequency.setValueAtTime(v.f2, now);
+            filter2.Q.setValueAtTime(6, now);
+
+            osc.connect(filter1);
+            osc.connect(filter2);
+            filter1.connect(masterGain);
+            filter2.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + v.dur / 1000);
+          }
+
+          // Route to the orb's internal Web Audio analyser
+          orbInstance.hookAudioNode(masterGain);
+          masterGain.connect(ctx.destination);
+
+          index++;
+          this.currentDemo = setTimeout(playNext, v.dur + 80);
+        };
+
+        playNext();
+      }
+
+      // Plays dynamic rhythmic beat (kick + sub-bass + hat) to demonstrate rhythmic dancing
+      playRhythm(orbInstance, onProgress, onEnd) {
+        this.init();
+        this.stop();
+        const ctx = this.ctx;
+        orbInstance.setState('speaking');
+
+        let beat = 0;
+        const totalBeats = 16;
+        const bpm = 125;
+        const intervalMs = (60 / bpm) * 1000 / 2; // eighth notes
+
+        this.currentDemo = setInterval(() => {
+          const now = ctx.currentTime;
+          const isKick = beat % 4 === 0;
+          const isSnare = beat % 8 === 4;
+          const isHat = beat % 2 === 1;
+
+          if (onProgress) {
+            onProgress(`Beat ${beat + 1}/${totalBeats} · ${isKick ? 'KICK (Sub-Bass Swell)' : isSnare ? 'SNARE (Mid Bloom)' : 'HI-HAT (Treble Ripple)'}`);
+          }
+
+          if (isKick) {
+            // Deep sub-bass punch (45Hz - 110Hz)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.exponentialRampToValueAtTime(42, now + 0.25);
+            gain.gain.setValueAtTime(0.45, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            osc.connect(gain);
+            orbInstance.hookAudioNode(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.28);
+          }
+
+          if (isSnare) {
+            // Mid frequency clap
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(220, now);
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.connect(gain);
+            orbInstance.hookAudioNode(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.2);
+          }
+
+          if (isHat) {
+            // High frequency tick (7kHz)
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(7500, now);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+            osc.connect(gain);
+            orbInstance.hookAudioNode(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.06);
+          }
+
+          beat++;
+          if (beat >= totalBeats) {
+            this.stop();
+            orbInstance.setState('idle');
+            if (onEnd) onEnd();
+          }
+        }, intervalMs);
+      }
+    }
+
+    const synth = new AcousticSynth();
+
+    /**
+     * OpenAIOrb — True Sound-Shaped Living Fluid Sphere Visualizer
+     */
+    class OpenAIOrb {
+      constructor(options = {}) {
+        this.canvas = options.canvas || document.getElementById('openai-orb-canvas');
+        if (!this.canvas) throw new Error('OpenAIOrb: Target canvas element not found.');
+
+        this.ctx = this.canvas.getContext('2d');
+        this.state = options.state || 'idle';
+        this.themeId = options.theme || 'siri';
+
+        // Frequency spectrum data & physical energy bands
+        this.fftSize = 128; // 64 frequency bins
+        this.freqData = new Uint8Array(64);
+        this.smoothedFreq = new Float32Array(64);
+        this.bands = { bass: 0, lowMid: 0, mid: 0, highMid: 0, treble: 0, overall: 0 };
+        this.intensity = 1.4;
+
+        // Dynamics & Time
+        this.time = 0;
+        this.manualVolume = 0;
+        this.manualMode = false;
+        this.animationFrameId = null;
+
+        // 3D Parallax Tilt & Jelly Spring Physics
+        this.pointer = { x: 0, y: 0, isDown: false, targetX: 0, targetY: 0 };
+        this.tilt = { x: 0, y: 0, vx: 0, vy: 0 };
+        this.jelly = { scaleX: 1, scaleY: 1, vx: 0, vy: 0 };
+
+        // Swirling Chromatic Vortices
+        this.vortices = [
+          { angle: 0, speed: 0.02, radOffset: 32, size: 75, colorIdx: 1 },
+          { angle: Math.PI * 0.66, speed: -0.016, radOffset: 40, size: 90, colorIdx: 2 },
+          { angle: Math.PI * 1.33, speed: 0.024, radOffset: 46, size: 80, colorIdx: 3 }
+        ];
+
+        // Shockwaves & Orbiting Particles
+        this.shockwaves = [];
+        this.particles = [];
+        this.initParticles(32);
+
+        // Web Audio Hooks
+        this.audioCtx = null;
+        this.analyser = null;
+        this.micStream = null;
+
+        // Theme Palette Definitions
+        this.themes = {
+          siri: {
+            name: 'Apple Intelligence',
+            core1: '#38bdf8', core2: '#ec4899', core3: '#818cf8', core4: '#f43f5e',
+            glow: 'rgba(236, 72, 153, 0.45)',
+            backdrop: 'radial-gradient(circle, rgba(236, 72, 153, 0.35) 0%, rgba(56, 189, 248, 0.28) 45%, rgba(129, 140, 248, 0.15) 70%, transparent 80%)'
+          },
+          vale: {
+            name: 'Vale (GPT-4o)',
+            core1: '#38bdf8', core2: '#818cf8', core3: '#c084fc', core4: '#2563eb',
+            glow: 'rgba(56, 189, 248, 0.48)',
+            backdrop: 'radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(139, 92, 246, 0.25) 50%, transparent 70%)'
+          },
+          sol: {
+            name: 'Sol (Warm Amber)',
+            core1: '#fbbf24', core2: '#f59e0b', core3: '#ea580c', core4: '#ef4444',
+            glow: 'rgba(245, 158, 11, 0.48)',
+            backdrop: 'radial-gradient(circle, rgba(251, 191, 36, 0.35) 0%, rgba(234, 88, 12, 0.25) 50%, transparent 70%)'
+          },
+          maple: {
+            name: 'Maple (Sakura)',
+            core1: '#f472b6', core2: '#db2777', core3: '#9d174d', core4: '#f43f5e',
+            glow: 'rgba(244, 114, 182, 0.48)',
+            backdrop: 'radial-gradient(circle, rgba(244, 114, 182, 0.35) 0%, rgba(219, 39, 119, 0.25) 50%, transparent 70%)'
+          },
+          alp: {
+            name: 'Alp (Emerald)',
+            core1: '#2dd4bf', core2: '#10b981', core3: '#0d9488', core4: '#065f46',
+            glow: 'rgba(45, 212, 191, 0.48)',
+            backdrop: 'radial-gradient(circle, rgba(45, 212, 191, 0.35) 0%, rgba(13, 148, 136, 0.25) 50%, transparent 70%)'
+          },
+          obsidian: {
+            name: 'Obsidian (Dark Matter)',
+            core1: '#c084fc', core2: '#a855f7', core3: '#ec4899', core4: '#7c3aed',
+            glow: 'rgba(168, 85, 247, 0.48)',
+            backdrop: 'radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(236, 72, 153, 0.25) 50%, transparent 70%)'
+          },
+          glacier: {
+            name: 'Glacier (Cyber Pure)',
+            core1: '#e0f2fe', core2: '#38bdf8', core3: '#2563eb', core4: '#0284c7',
+            glow: 'rgba(56, 189, 248, 0.48)',
+            backdrop: 'radial-gradient(circle, rgba(224, 242, 254, 0.4) 0%, rgba(37, 99, 235, 0.25) 50%, transparent 70%)'
+          }
+        };
+
+        this.initEqualizerBars();
+        this.setupPointerListeners();
+        this.startRenderLoop();
+      }
+
+      initEqualizerBars() {
+        const deck = document.getElementById('spectrum-bars');
+        if (!deck) return;
+        deck.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+          const bar = document.createElement('div');
+          bar.className = 'spec-bar';
+          bar.id = `spec-bar-${i}`;
+          deck.appendChild(bar);
+        }
+      }
+
+      initParticles(count) {
+        this.particles = [];
+        for (let i = 0; i < count; i++) {
+          this.particles.push({
+            angle: (i / count) * Math.PI * 2,
+            dist: 130 + Math.random() * 65,
+            speed: 0.008 + Math.random() * 0.015,
+            size: 1.2 + Math.random() * 2.4,
+            alpha: 0.2 + Math.random() * 0.6
+          });
+        }
+      }
+
+      get currentTheme() {
+        return this.themes[this.themeId] || this.themes.siri;
+      }
+
+      setTheme(themeId) {
+        if (this.themes[themeId]) {
+          this.themeId = themeId;
+        }
+      }
+
+      setState(state) {
+        this.state = state;
+      }
+
+      setIntensity(val) {
+        this.intensity = Math.max(0.2, Math.min(3.0, val));
+      }
+
+      feedAudioVolume(vol) {
+        this.manualVolume = Math.max(0, Math.min(1, vol));
+        this.manualMode = true;
+      }
+
+      // DIRECT EXTERNAL FFT HOOK: User or custom AI audio feed
+      feedFrequencyData(uint8Array) {
+        if (!uint8Array || !uint8Array.length) return;
+        const len = Math.min(this.freqData.length, uint8Array.length);
+        for (let i = 0; i < len; i++) {
+          this.freqData[i] = uint8Array[i];
+        }
+        this.manualMode = false;
+      }
+
+      pulse(magnitude = 1.0) {
+        this.shockwaves.push({
+          r: 65,
+          alpha: Math.min(0.95, 0.75 * magnitude),
+          speed: 7.2 * magnitude
+        });
+        this.jiggle(magnitude * 0.22);
+      }
+
+      jiggle(intensity = 0.25) {
+        this.jelly.vx += (Math.random() - 0.5) * intensity * 2;
+        this.jelly.vy += (Math.random() - 0.5) * intensity * 2;
+        this.jelly.scaleX = 1 + intensity;
+        this.jelly.scaleY = 1 - intensity;
+      }
+
+      setupPointerListeners() {
+        const wrap = this.canvas.parentElement;
+        if (!wrap) return;
+
+        const updateCoords = (e) => {
+          const rect = wrap.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
+          const ny = ((clientY - rect.top) / rect.height) * 2 - 1;
+          this.pointer.targetX = Math.max(-1, Math.min(1, nx));
+          this.pointer.targetY = Math.max(-1, Math.min(1, ny));
+        };
+
+        wrap.addEventListener('pointermove', (e) => updateCoords(e));
+        wrap.addEventListener('pointerdown', (e) => {
+          this.pointer.isDown = true;
+          updateCoords(e);
+          this.pulse(1.2);
+        });
+
+        window.addEventListener('pointerup', () => {
+          if (this.pointer.isDown) {
+            this.pointer.isDown = false;
+            this.jiggle(0.2);
+          }
+          this.pointer.targetX = 0;
+          this.pointer.targetY = 0;
+        });
+      }
+
+      ensureAudioContext() {
+        if (!this.audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.audioCtx = new AudioContext();
+        }
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+        if (!this.analyser) {
+          this.analyser = this.audioCtx.createAnalyser();
+          this.analyser.fftSize = this.fftSize;
+          this.analyser.smoothingTimeConstant = 0.8;
+        }
+      }
+
+      hookAudioNode(node) {
+        this.ensureAudioContext();
+        node.connect(this.analyser);
+      }
+
+      async connectMicrophone() {
+        if (this.micStream) {
+          this.disconnectMicrophone();
+          return false;
+        }
+
+        try {
+          this.ensureAudioContext();
+          this.micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true }
+          });
+
+          const source = this.audioCtx.createMediaStreamSource(this.micStream);
+          source.connect(this.analyser);
+
+          this.setState('listening');
+          return true;
+        } catch (err) {
+          console.warn('Microphone error:', err);
+          return false;
+        }
+      }
+
+      disconnectMicrophone() {
+        if (this.micStream) {
+          this.micStream.getTracks().forEach(t => t.stop());
+          this.micStream = null;
+        }
+        this.setState('idle');
+      }
+
+      connectAudioElement(audioEl) {
+        this.ensureAudioContext();
+        const source = this.audioCtx.createMediaElementSource(audioEl);
+        source.connect(this.analyser);
+        this.analyser.connect(this.audioCtx.destination);
+      }
+
+      feedAIText(text, options = {}) {
+        this.setState('speaking');
+        this.pulse(1.1);
+
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = options.rate || 1.05;
+          utterance.pitch = options.pitch || 1.0;
+
+          // Synthesize phonetic wave movement
+          const interval = setInterval(() => {
+            if (this.state === 'speaking') {
+              for (let i = 0; i < 64; i++) {
+                // Speech formant profile simulation
+                const isFormant = i === 4 || i === 12 || i === 24;
+                const baseVal = isFormant ? 180 + Math.random() * 70 : 40 + Math.random() * 50;
+                this.freqData[i] = baseVal;
+              }
+            }
+          }, 60);
+
+          utterance.onend = () => {
+            clearInterval(interval);
+            this.freqData.fill(0);
+            this.setState('idle');
+            if (typeof options.onComplete === 'function') options.onComplete();
+          };
+
+          utterance.onerror = () => {
+            clearInterval(interval);
+            this.freqData.fill(0);
+            this.setState('idle');
+          };
+
+          window.speechSynthesis.speak(utterance);
+        }
+      }
+
+      startRenderLoop() {
+        const render = () => {
+          this.time += 0.026;
+
+          // 1. Fetch real FFT frequency spectrum
+          if (this.analyser) {
+            this.analyser.getByteFrequencyData(this.freqData);
+          } else if (this.manualMode) {
+            // Map manual volume across spectrum
+            for (let i = 0; i < 64; i++) {
+              const rollOff = Math.max(0, 1 - (i / 40));
+              this.freqData[i] = this.manualVolume * 255 * rollOff;
+            }
+          }
+
+          // 2. Smooth FFT bins (Attack & Decay) + Compute Physical Acoustic Bands
+          let sumBass = 0, sumLowMid = 0, sumMid = 0, sumHighMid = 0, sumTreble = 0;
+
+          for (let i = 0; i < 64; i++) {
+            const raw = this.freqData[i] / 255;
+            // Quick attack, smooth decay
+            const smoothing = raw > this.smoothedFreq[i] ? 0.38 : 0.12;
+            this.smoothedFreq[i] += (raw - this.smoothedFreq[i]) * smoothing;
+            const val = this.smoothedFreq[i];
+
+            if (i <= 4) sumBass += val;
+            else if (i <= 12) sumLowMid += val;
+            else if (i <= 26) sumMid += val;
+            else if (i <= 45) sumHighMid += val;
+            else sumTreble += val;
+          }
+
+          this.bands.bass = (sumBass / 5) * this.intensity;
+          this.bands.lowMid = (sumLowMid / 8) * this.intensity;
+          this.bands.mid = (sumMid / 14) * this.intensity;
+          this.bands.highMid = (sumHighMid / 19) * this.intensity;
+          this.bands.treble = (sumTreble / 19) * this.intensity;
+          this.bands.overall = (this.bands.bass * 0.4 + this.bands.mid * 0.35 + this.bands.treble * 0.25);
+
+          // Update live spectrum bars UI
+          for (let b = 0; b < 16; b++) {
+            const bar = document.getElementById(`spec-bar-${b}`);
+            if (bar) {
+              const freqIdx = Math.floor(b * 3.5);
+              const heightPct = Math.min(22, 4 + (this.smoothedFreq[freqIdx] || 0) * 18);
+              bar.style.height = `${heightPct}px`;
+            }
+          }
+
+          // 3. Parallax Tilt & Jelly Spring Damping
+          this.tilt.vx += (this.pointer.targetX * 24 - this.tilt.x) * 0.08;
+          this.tilt.vy += (this.pointer.targetY * 24 - this.tilt.y) * 0.08;
+          this.tilt.vx *= 0.76;
+          this.tilt.vy *= 0.76;
+          this.tilt.x += this.tilt.vx;
+          this.tilt.y += this.tilt.vy;
+
+          const springK = 0.12;
+          const dampK = 0.78;
+          const forceX = (1 - this.jelly.scaleX) * springK;
+          const forceY = (1 - this.jelly.scaleY) * springK;
+          this.jelly.vx = (this.jelly.vx + forceX) * dampK;
+          this.jelly.vy = (this.jelly.vy + forceY) * dampK;
+          this.jelly.scaleX += this.jelly.vx;
+          this.jelly.scaleY += this.jelly.vy;
+
+          // 4. Canvas Prep
+          const canvas = this.canvas;
+          const ctx = this.ctx;
+          const rect = canvas.getBoundingClientRect();
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const width = rect.width || 420;
+          const height = rect.height || 420;
+
+          if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+          }
+
+          ctx.save();
+          ctx.scale(dpr, dpr);
+          ctx.clearRect(0, 0, width, height);
+
+          const centerX = width / 2 + this.tilt.x * 0.6;
+          const centerY = height / 2 + this.tilt.y * 0.6;
+          const isDark = document.documentElement.classList.contains('dark');
+          const theme = this.currentTheme;
+
+          let c1 = theme.core1;
+          let c2 = theme.core2;
+          let c3 = theme.core3;
+          let c4 = theme.core4 || theme.core2;
+          let glowColor = theme.glow;
+
+          if (this.state === 'listening') {
+            c1 = '#34d399'; c2 = '#38bdf8'; c3 = '#6366f1'; c4 = '#10b981';
+            glowColor = 'rgba(52, 211, 153, 0.5)';
+          } else if (this.state === 'thinking') {
+            c1 = '#f43f5e'; c2 = '#a855f7'; c3 = '#ec4899'; c4 = '#fb7185';
+            glowColor = 'rgba(244, 63, 94, 0.55)';
+          }
+
+          // BASE RADIUS: Directly pulses with sub-bass vocal/kick energy
+          const baseRadius = (96 + this.bands.bass * 36) * Math.max(0.8, this.jelly.scaleX);
+
+          // --- LAYER 1: Ambient Backlight Bloom (Expands with sound) ---
+          const auraRadius = baseRadius * (1.6 + this.bands.overall * 0.5);
+          const ambientGrad = ctx.createRadialGradient(
+            centerX, centerY, baseRadius * 0.25,
+            centerX, centerY, auraRadius
+          );
+          ambientGrad.addColorStop(0, glowColor);
+          ambientGrad.addColorStop(0.45, glowColor.replace(/[\d\.]+\)$/, '0.2)'));
+          ambientGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = ambientGrad;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, auraRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // --- LAYER 2: Swirling Subsurface Chromatic Vortices (Accelerates with voice) ---
+          ctx.save();
+          this.vortices.forEach((v) => {
+            v.angle += v.speed * (1 + this.bands.overall * 3.5);
+            const vx = centerX + Math.cos(v.angle) * (v.radOffset + this.bands.lowMid * 20) + this.tilt.x * 0.4;
+            const vy = centerY + Math.sin(v.angle) * (v.radOffset + this.bands.lowMid * 20) + this.tilt.y * 0.4;
+
+            const vGrad = ctx.createRadialGradient(vx, vy, 4, vx, vy, v.size * (1 + this.bands.bass * 0.7));
+            const col = v.colorIdx === 1 ? c1 : v.colorIdx === 2 ? c2 : c3;
+            vGrad.addColorStop(0, col);
+            vGrad.addColorStop(0.8, 'transparent');
+
+            ctx.fillStyle = vGrad;
+            ctx.globalCompositeOperation = 'screen';
+            ctx.beginPath();
+            ctx.arc(vx, vy, v.size * (1 + this.bands.bass * 0.7), 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.restore();
+
+          // --- LAYER 3: Outer Refractive Acoustic Membrane (Harmonic Fourier Echo) ---
+          const numPts = 48;
+          const harmonicPts = [];
+          for (let i = 0; i < numPts; i++) {
+            const theta = (i / numPts) * Math.PI * 2;
+            const normAngle = Math.abs(Math.sin(theta));
+            const fIdx = Math.floor(normAngle * 45);
+            const fVal = this.smoothedFreq[fIdx] || 0;
+
+            const wave = Math.sin(theta * 3 - this.time * 2) * (8 + fVal * 28 * this.intensity) +
+                         Math.cos(theta * 5 + this.time * 1.5) * (5 + this.bands.treble * 22);
+            const r = baseRadius * 1.1 + wave;
+            harmonicPts.push({
+              x: centerX + Math.cos(theta) * r,
+              y: centerY + Math.sin(theta) * r
+            });
+          }
+
+          ctx.beginPath();
+          for (let i = 0; i < numPts; i++) {
+            const p1 = harmonicPts[i];
+            const p2 = harmonicPts[(i + 1) % numPts];
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            if (i === 0) ctx.moveTo(p1.x, p1.y);
+            ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+          }
+          ctx.closePath();
+          ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(56, 189, 248, 0.1)';
+          ctx.fill();
+
+          // --- LAYER 4: Primary Sound-Shaped Core Spline (TRUE RADIAL FFT DEFORMATION) ---
+          const pts = [];
+          for (let i = 0; i < numPts; i++) {
+            const theta = (i / numPts) * Math.PI * 2;
+
+            // Symmetrical bilateral frequency mapping:
+            // Top/Bottom (cos(theta) close to 0) = Bass vowel swell
+            // Left/Right (sin(theta) close to +/-1) = Mid speech formants
+            const normX = Math.abs(Math.cos(theta));
+            const normY = Math.abs(Math.sin(theta));
+
+            const bassDeform = (1 - normX) * this.bands.bass * 28;
+            const midDeform  = normX * Math.sin(theta * 4 + this.time * 2.5) * (this.bands.mid * 32);
+            const trebleRipple = Math.sin(theta * 12 + this.time * 8) * (this.bands.treble * 16);
+
+            // Natural resting breath when quiet
+            const idleBreath = (this.state === 'idle')
+              ? Math.sin(theta * 3 + this.time * 1.4) * 4
+              : 0;
+
+            const r = baseRadius + bassDeform + midDeform + trebleRipple + idleBreath;
+
+            pts.push({
+              x: centerX + Math.cos(theta) * r,
+              y: centerY + Math.sin(theta) * r
+            });
+          }
+
+          ctx.beginPath();
+          for (let i = 0; i < numPts; i++) {
+            const p1 = pts[i];
+            const p2 = pts[(i + 1) % numPts];
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            if (i === 0) ctx.moveTo(p1.x, p1.y);
+            ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+          }
+          ctx.closePath();
+
+          // Dynamic radial gradient modulated by audio energy
+          const grad = ctx.createRadialGradient(
+            centerX - baseRadius * 0.28 + this.tilt.x * 0.5,
+            centerY - baseRadius * 0.32 + this.tilt.y * 0.5,
+            6,
+            centerX, centerY, baseRadius * 1.18
+          );
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.24, c1);
+          grad.addColorStop(0.58, c2);
+          grad.addColorStop(0.85, c3);
+          grad.addColorStop(1, c4);
+
+          ctx.fillStyle = grad;
+          ctx.shadowBlur = (34 + this.bands.bass * 30) * this.intensity;
+          ctx.shadowColor = c1;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // --- LAYER 5: Organic Caustics & Specular Glass Reflection ---
+          ctx.beginPath();
+          ctx.ellipse(
+            centerX - baseRadius * 0.34 + this.tilt.x * 0.3,
+            centerY - baseRadius * 0.38 + this.tilt.y * 0.3,
+            baseRadius * 0.44,
+            baseRadius * 0.24,
+            -Math.PI / 4,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.48)';
+          ctx.fill();
+
+          // Subsurface Rim Glow (Fresnel Edge reacts to treble)
+          ctx.lineWidth = 2.0 + this.bands.treble * 3.5;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 + this.bands.treble * 0.5})`;
+          ctx.stroke();
+
+          // --- LAYER 6: Orbiting Stardust Particles (Spins with audio tempo) ---
+          this.particles.forEach((p) => {
+            p.angle += p.speed * (1 + this.bands.overall * 4);
+            const curDist = p.dist + Math.sin(this.time * 2.5 + p.angle) * 10 + this.bands.bass * 40;
+            const px = centerX + Math.cos(p.angle) * curDist + this.tilt.x * 0.2;
+            const py = centerY + Math.sin(p.angle) * curDist + this.tilt.y * 0.2;
+
+            ctx.beginPath();
+            ctx.arc(px, py, p.size * (1 + this.bands.treble * 1.5), 0, Math.PI * 2);
+            ctx.fillStyle = isDark
+              ? `rgba(255, 255, 255, ${p.alpha * (0.8 + this.bands.overall * 0.5)})`
+              : `rgba(14, 165, 233, ${p.alpha * 0.9})`;
+            ctx.fill();
+          });
+
+          // --- LAYER 7: Sonic Shockwave Ripples ---
+          for (let s = this.shockwaves.length - 1; s >= 0; s--) {
+            const sw = this.shockwaves[s];
+            sw.r += sw.speed || 7;
+            sw.alpha -= 0.032;
+
+            if (sw.alpha <= 0) {
+              this.shockwaves.splice(s, 1);
+            } else {
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, sw.r, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(255, 255, 255, ${sw.alpha})`;
+              ctx.lineWidth = 2.5;
+              ctx.stroke();
+            }
+          }
+
+          ctx.restore();
+          this.animationFrameId = requestAnimationFrame(render);
+        };
+
+        render();
+      }
+
+      destroy() {
+        if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+        }
+        this.disconnectMicrophone();
+      }
+    }
+
+    // ==========================================================================
+    // UI Orchestration & Audio Demo Handlers
+    // ==========================================================================
+    const orb = new OpenAIOrb({
+      canvas: document.getElementById('openai-orb-canvas'),
+      theme: 'siri',
+      state: 'idle'
+    });
+
+    // Theme Switcher
+    function switchTheme(themeId) {
+      orb.setTheme(themeId);
+      document.querySelectorAll('.theme-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(themeId));
+      });
+      const label = document.getElementById('active-theme-label');
+      if (label) label.textContent = orb.currentTheme.name;
+      const aura = document.getElementById('ambient-aura');
+      if (aura && orb.currentTheme.backdrop) {
+        aura.style.background = orb.currentTheme.backdrop;
+      }
+    }
+
+    // State Switcher
+    function switchState(state) {
+      orb.setState(state);
+      document.querySelectorAll('.seg-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(state));
+      });
+
+      const dot = document.getElementById('hud-dot');
+      const label = document.getElementById('hud-state-label');
+      const title = document.getElementById('hud-title');
+      const desc = document.getElementById('hud-desc');
+
+      if (label) label.textContent = `STATE: ${state.toUpperCase()}`;
+
+      if (state === 'listening') {
+        if (dot) dot.style.background = '#10b981';
+        if (title) title.textContent = 'Listening attentively...';
+        if (desc) desc.textContent = 'Microphone or audio stream active. Speak or sing into mic.';
+      } else if (state === 'thinking') {
+        if (dot) dot.style.background = '#ec4899';
+        if (title) title.textContent = 'Thinking & Processing...';
+        if (desc) desc.textContent = 'Rapid multi-harmonic neural turbulence while computing completion.';
+      } else if (state === 'speaking') {
+        if (dot) dot.style.background = '#38bdf8';
+        if (title) title.textContent = 'Acoustic Sound Dancing';
+        if (desc) desc.textContent = 'Orb shape physically morphing to vowel formants and audio frequencies.';
+      } else {
+        if (dot) dot.style.background = 'var(--accent)';
+        if (title) title.textContent = 'Acoustic Living Orb';
+        if (desc) desc.textContent = 'Genuinely shaped by and dancing with real sound frequencies.';
+      }
+    }
+
+    // Acoustic Demo 1: Vowel Speech Formant Dance
+    function playVowelMorphDemo() {
+      const btn = document.getElementById('btn-vowel-demo');
+      btn.classList.add('active');
+      const transcript = document.getElementById('hud-transcript');
+
+      synth.playVowels(
+        orb,
+        (vowelName) => {
+          if (transcript) {
+            transcript.classList.add('active');
+            transcript.innerHTML = `<strong>Acoustic Vowel Dance:</strong> ${vowelName}`;
+          }
+        },
+        () => {
+          btn.classList.remove('active');
+          if (transcript) {
+            transcript.innerHTML = `<span>Vowel sequence complete. Notice how each vowel created a completely different physical shape!</span>`;
+          }
+        }
+      );
+    }
+
+    // Acoustic Demo 2: Bass & Beat Groove
+    function playBassBeatDemo() {
+      const btn = document.getElementById('btn-beat-demo');
+      btn.classList.add('active');
+      const transcript = document.getElementById('hud-transcript');
+
+      synth.playRhythm(
+        orb,
+        (beatInfo) => {
+          if (transcript) {
+            transcript.classList.add('active');
+            transcript.innerHTML = `<strong>Music Rhythm Groove:</strong> ${beatInfo}`;
+          }
+        },
+        () => {
+          btn.classList.remove('active');
+          if (transcript) {
+            transcript.innerHTML = `<span>Groove finished. The Orb danced in exact sync with Kick, Snare & Hi-Hat!</span>`;
+          }
+        }
+      );
+    }
+
+    // Live Microphone Toggle
+    async function toggleMicrophone() {
+      const btn = document.getElementById('btn-toggle-mic');
+      const isConnected = await orb.connectMicrophone();
+
+      if (isConnected) {
+        btn.classList.add('active');
+        btn.querySelector('span').textContent = 'Mic Active (Speak!)';
+        switchState('listening');
+        showToast('Microphone connected! Speak, whistle or hum.');
+      } else {
+        btn.classList.remove('active');
+        btn.querySelector('span').textContent = 'Live Microphone Feed';
+        switchState('idle');
+        showToast('Microphone disconnected');
+      }
+    }
+
+    // User Audio File Upload (MP3, WAV, etc.)
+    function handleAudioFileUpload(file) {
+      if (!file) return;
+      const audioUrl = URL.createObjectURL(file);
+      const audio = new Audio(audioUrl);
+      orb.connectAudioElement(audio);
+      audio.play();
+      switchState('speaking');
+      showToast(`Playing "${file.name}" — dancing to audio stream!`);
+
+      const transcript = document.getElementById('hud-transcript');
+      if (transcript) {
+        transcript.classList.add('active');
+        transcript.innerHTML = `<strong>Now Playing:</strong> ${file.name}`;
+      }
+
+      audio.onended = () => {
+        switchState('idle');
+      };
+    }
+
+    // Sensitivity Slider
+    function handleIntensityChange(val) {
+      const intensity = val / 100;
+      orb.setIntensity(intensity);
+      document.getElementById('intensity-display').textContent = `${intensity.toFixed(1)}x`;
+    }
+
+    // Manual Volume Slider
+    function handleManualVolume(val) {
+      const vol = val / 100;
+      orb.feedAudioVolume(vol);
+      document.getElementById('vol-display').textContent = vol.toFixed(2);
+    }
+
+    // AI Sandbox Feed Form
+    function handleAISandboxSubmit(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('ai-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const card = document.getElementById('hud-transcript');
+      if (card) {
+        card.classList.add('active');
+        card.innerHTML = `<strong>AI Speech:</strong> "${text}"`;
+      }
+
+      switchState('speaking');
+      orb.feedAIText(text, {
+        onComplete: () => {
+          switchState('idle');
+        }
+      });
+    }
+
+    // Theme Toggle (Dark / Light)
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      if (!isDark) {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+    }
+
+    // Copy Integration Snippet
+    function copyIntegrationCode() {
+      const snippet = document.getElementById('snippet-code').innerText;
+      navigator.clipboard.writeText(snippet).then(() => {
+        showToast('Integration snippet copied to clipboard!');
+      }).catch(() => {
+        showToast('Code copied!');
+      });
+    }
+
+    // Toast Helper
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2400);
+    }
+  </script>
+</body>
+</html>
