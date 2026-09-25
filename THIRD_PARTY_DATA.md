@@ -2,14 +2,14 @@
   <img src="https://raw.githubusercontent.com/xertxetin/CetinLM/refs/heads/main/docs/cetinlm-logo-lq.png" alt="CetinLM Logo" width="230px">
 </p>
 
-<h1 align="center">CetinLM — Public Data Provenance</h1>
+<h1 align="center">CetinLM — Public Data & Third-Party Runtime Provenance</h1>
 
 <p align="center">
-  <strong>Third-party source transparency without publishing the private corpus recipe.</strong>
+  <strong>Training-data provenance and separately licensed runtime components, without publishing the private corpus recipe.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/scope-Base--v1%20provenance-111111" alt="Base-v1 provenance">
+  <img src="https://img.shields.io/badge/scope-Base--v1%20%2B%20Live%20provenance-111111" alt="Base-v1 and Live provenance">
   <img src="https://img.shields.io/badge/status-active%20research-111111" alt="Active research">
   <img src="https://img.shields.io/badge/principle-attribution%20%2B%20traceability-111111" alt="Attribution and traceability">
 </p>
@@ -20,7 +20,7 @@
 
 CetinLM combines project-created first-party material with qualified third-party language data.
 
-This page documents the **public provenance boundary** for the active Base-v1 research generation: which upstream dataset families are represented, what role they broadly serve, and which upstream license metadata / attribution obligations are relevant.
+This page documents the **public provenance boundary** for the active Base-v1 research generation: which upstream dataset families are represented, what role they broadly serve, and which upstream license metadata / attribution obligations are relevant. It also records a narrow set of third-party components used by the separate CetinLM Live runtime so that training-data provenance and runtime licensing are not conflated.
 
 It intentionally does **not** publish the private corpus recipe. Exact mixture weights, local filtering implementation, source-level token allocation, internal manifests, reconstruction hashes and admission thresholds remain private during active Base-v1 research.
 
@@ -79,6 +79,32 @@ CetinLM also contains project-created first-party data designed for the research
 First-party data is **not treated as automatically trustworthy simply because we created it**. It is still subject to the project's own quality, duplication, framing and training-data qualification process before admission to an active generation.
 
 Public documentation intentionally describes first-party material at a high level rather than publishing the internal data-generation recipe or exact source allocation.
+
+---
+
+## CetinLM Live — third-party speech runtime
+
+CetinLM Live is a **runtime/product layer**, not a Base-v1 training-data source. Its speech stack may integrate separately licensed third-party software and model artifacts. Those licenses remain applicable independently of CetinLM's own code, data, or future model-weight licensing.
+
+### Resemble AI — Chatterbox Multilingual V3
+
+- **Project / model family:** Chatterbox Multilingual V3
+- **Upstream:** Resemble AI
+- **Public upstream model card:** `ResembleAI/chatterbox`
+- **V3 demo / product identifier:** `ResembleAI/Chatterbox-Multilingual-TTS-V3`
+- **CetinLM use:** optional/local text-to-speech for the Live voice runtime under `services/live_voice/`
+- **Upstream license:** **MIT License**
+- **Full notice distributed by CetinLM:** [`./LICENSES/CHATTERBOX_MIT.txt`](./LICENSES/CHATTERBOX_MIT.txt)
+
+The upstream Chatterbox model card identifies Chatterbox as an open-source TTS family from Resemble AI, lists **Chatterbox Multilingual V3** as the current general-purpose multilingual model, and records the project license as **MIT**. CetinLM does not claim ownership of Chatterbox, its upstream implementation, model family, or third-party rights.
+
+The MIT notice is preserved with the project because redistribution of MIT-licensed software requires retaining the copyright and permission notice. The upstream software/model terms remain separate from CetinLM's Base-v1 data provenance and from any future CetinLM model-weight license.
+
+> **Important boundary:** Chatterbox Multilingual V3 is a Live speech dependency. It is **not** part of the Base-v1 language-model training corpus and does not contribute to CetinLM's processed-token accounting.
+
+### Other Live speech software
+
+Public third-party license texts used by the GitHub-facing project documentation are collected under [`./LICENSES/`](./LICENSES/). The current Live runtime notices include [`CHATTERBOX_MIT.txt`](./LICENSES/CHATTERBOX_MIT.txt) and [`FASTER_WHISPER_MIT.txt`](./LICENSES/FASTER_WHISPER_MIT.txt). Additional notices should be added there as dependencies are introduced, so the public distribution keeps its third-party notices self-contained.
 
 ---
 

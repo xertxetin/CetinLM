@@ -14,9 +14,11 @@ The exact reproduction blueprint remains private.
 
 ## Current Base-v1 status
 
-Base-v1 is in active pretraining and has passed **1.2B processed tokens**. Recent public milestones show continuing held-out improvement while production throughput remains in the broad **~4.4–4.5K tok/s** range on the target single-16GB-GPU system.
+Base-v1 is in active pretraining and has reached **5.15B processed tokens**. The current public best at 5.15B is **Val Global 2.496678 · PPL 12.142**, with the wider 4.80B → 5.15B window continuing to show net held-out improvement. Production throughput remains in the broad **~4.4–4.5K tok/s** range on the target single-16GB-GPU system.
 
-These are training-system observations, not final assistant-quality claims.
+At 5.00B, a separate 1,000-generation `web-balanced-v1` run measured **0.500% loop incidents**, **0.000% severe loops**, and **0.020% repetition burden**. This sampled mechanical-health estimate remains separate from the intentionally harsh RAW GREEDY stress probe.
+
+These are training-system observations, not final assistant-quality claims. See [`2026-09-25_BASE_V1_5_15B_PROGRESS.md`](./2026-09-25_BASE_V1_5_15B_PROGRESS.md) for the current public milestone record.
 
 ---
 
