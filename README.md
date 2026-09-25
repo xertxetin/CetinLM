@@ -101,7 +101,6 @@ Runtime/product work does **not** change Base-v1 token accounting or silently mo
 - [Technical Overview](./TECHNICAL_OVERVIEW.md)
 - [Model Factory](./MODEL_FACTORY.md)
 - [Third-Party Data & Runtime Provenance](./THIRD_PARTY_DATA.md)
-- [CetinLM V6 Live / Memory / Presence update](../CETINLM_V6_LIVE_MEMORY_PRESENCE_20260924.md)
 
 ---
 
